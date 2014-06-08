@@ -8,7 +8,7 @@ requirejs.config({
   nodeRequire: require,
   baseUrl: __dirname,
   paths: {
-    eight: '../lib/eight',
+    eight: '../src/eight',
     cs: '../vendor/cs'
   }
 });

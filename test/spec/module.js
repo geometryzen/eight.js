@@ -1,4 +1,4 @@
-// load the entire module/library and pass to the test
+// load the entire module and pass to the test
 define(['eight'],function(eight) {
 
   // use jasmine to run tests against the required code

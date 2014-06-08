@@ -20,7 +20,7 @@ module.exports = function(grunt) {
     },
     // run jasmine tests any time watched files change
     watch: {
-      files: ['lib/**/*','test/spec/**/*'],
+      files: ['src/**/*','test/spec/**/*'],
       tasks: ['jasmine']
     }
   });

@@ -2,8 +2,8 @@
 // https://github.com/jrburke/r.js/blob/master/build/example.build.js
 requirejs.config({
   // all modules loaded are relative to this path
-  // e.g. require(["grid/core"]) would grab /lib/grid/core.js
-  baseUrl: "./lib",
+  // e.g. require(["abc/core"]) would grab /src/abc/core.js
+  baseUrl: "./src",
 
   // specify custom module name paths
   paths: {
