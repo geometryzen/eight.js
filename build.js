@@ -7,17 +7,17 @@ requirejs.config({
 
   // specify custom module name paths
   paths: {
-    "cs": "../vendor/cs",
-    "coffee-script": "../vendor/coffee-script",
+    "cs": "../bower_components/require-cs/cs",
+    "coffee-script": "../bower_components/require-cs/coffee-script",
     "spec": "../test/spec"
   },
 
   // target amd loader shim as the main module, path is relative to baseUrl.
-  name: "../vendor/almond",
+  name: "../bower_components/almond/almond",
 
   optimize: "none",
 
-  // files to include along with almond.  only lib/eight.js is defined, as
+  // files to include along with almond.  only eight is defined, as
   // it pulls in the rest of the dependencies automatically.
   include: ["eight"],
 

@@ -10,20 +10,13 @@ Whichever method you use, the result is a single file with no external dependenc
 
 Kick off the requirejs optimizer by hand:
 ```console
-node vendor/r.js -o build.js
+node manual-deps/r.js -o build.js
 ```
 
 If your project does not require a browser environment, run Jasmine tests with node.
 ```console
 node test/runner-node
 ```
-
-If your project does require a browser, start a webserver in the root directry.
-```console
-servedir
-```
-...and browse to [http://localhost:8000/test/runner.html](http://localhost:8000/test/runner.html)
-
 
 ## Building / Testing / Minifying with Grunt
 
