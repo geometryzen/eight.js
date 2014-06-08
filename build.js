@@ -8,7 +8,7 @@ requirejs.config({
   // specify custom module name paths
   paths: {
     "cs": "../bower_components/require-cs/cs",
-    "coffee-script": "../bower_components/require-cs/coffee-script",
+    "coffee-script": "../bower_components/coffee-script/extras/coffee-script",
     "spec": "../test/spec"
   },
 
