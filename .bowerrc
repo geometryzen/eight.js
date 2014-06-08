@@ -1,4 +1,4 @@
 {
-  "directory": "vendorrequire('../dist/eight')",
+  "directory": "vendor",
   "json": "bower.json"
 }

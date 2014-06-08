@@ -19,6 +19,7 @@
     "requirejs": "~2.1.14",
     "require-cs": "~0.4.4",
     "almond": "~0.2.9",
-    "coffee-script": "~1.7.1"
+    "coffee-script": "~1.7.1",
+    "gl-matrix": "~2.2.1"
   }
 }
