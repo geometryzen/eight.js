@@ -426,7 +426,7 @@ define("../vendor/almond/almond", function(){});
 
 define('eight/core',[],function() {
   var eight = {
-    VERSION: '0.1.5'
+    VERSION: '0.0.1'
   };
 
   return eight;
@@ -434,7 +434,7 @@ define('eight/core',[],function() {
 define('eight/feature',[],function() {
   return function() { return 'working'; };
 });
-define('eight/module',[],function() {
+define('eight/renderers/module',[],function() {
   return {
     method: function() { return 'it does'; }
   };
@@ -451,11 +451,51 @@ define('cs',{load: function(id){throw new Error("Dynamic load not allowed: " + i
 
 }).call(this);
 
-define('eight',['require','eight/core','eight/feature','eight/module','cs!eight/coffeescript'],function(require) {
+define('eight/cameras/Camera',[],function() {
+
+  var Camera = function() {
+    console.log("Hello, Camera!");
+  }
+
+  return Camera;
+
+});
+define('eight/renderers/WebGLRenderer',[],function() {
+
+  var WebGLRenderer = function() {
+    console.log("Hello, WebGLRenderer!");
+  }
+
+  return WebGLRenderer;
+
+});
+define('eight/scenes/Scene',[],function() {
+
+  var Scene = function() {
+    console.log("Hello, Scene!");
+  }
+
+  return Scene;
+
+});
+define('eight/objects/Mesh',[],function() {
+
+  var Mesh = function() {
+    console.log("Hello, Mesh!");
+  }
+
+  return Mesh;
+
+});
+define('eight',['require','eight/core','eight/feature','eight/renderers/module','cs!eight/coffeescript','eight/cameras/Camera','eight/renderers/WebGLRenderer','eight/scenes/Scene','eight/objects/Mesh'],function(require) {
   var eight = require('eight/core');
   eight.feature = require('eight/feature');
-  eight.module = require('eight/module');
+  eight.module = require('eight/renderers/module');
   eight.coffeescript = require('cs!eight/coffeescript');
+  eight.Camera = require('eight/cameras/Camera');
+  eight.WebGLRenderer = require('eight/renderers/WebGLRenderer');
+  eight.Scene = require('eight/scenes/Scene');
+  eight.Mesh = require('eight/objects/Mesh');
   return eight;
 });
 

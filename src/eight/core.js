@@ -1,6 +1,6 @@
 define(function() {
   var eight = {
-    VERSION: '0.1.5'
+    VERSION: '0.0.1'
   };
 
   return eight;

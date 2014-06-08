@@ -7,6 +7,7 @@
       canvas{ background-color: white; }
     </style>
     <script src="../vendor/gl-matrix/dist/gl-matrix.js"></script>
+    <script src="../dist/eight.js"></script>
     <script id="shader-vs" type="x-shader/x-vertex">
       attribute vec3 aVertexPosition;
       attribute vec3 aVertexColor;
@@ -52,6 +53,7 @@
         try
         {
           gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+          new EIGHT.WebGLRenderer(gl);
         }
         catch(e)
         {
@@ -59,6 +61,9 @@
 
         if(gl)
         {
+          new EIGHT.Scene();
+          new EIGHT.Camera();
+          new EIGHT.Mesh();
           initShaders();
           setupBuffers();
           getMatrixUniforms();
