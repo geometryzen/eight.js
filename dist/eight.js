@@ -422,7 +422,7 @@ var requirejs, require, define;
     };
 }());
 
-define("../bower_components/almond/almond", function(){});
+define("../vendor/almond/almond", function(){});
 
 define('eight/core',[],function() {
   var eight = {
@@ -467,6 +467,6 @@ define('eight',['require','eight/core','eight/feature','eight/module','cs!eight/
       define(function () { return library; });
     }(globalDefine));
   } else {
-    global['eight'] = library;
+    global['EIGHT'] = library;
   }
 }(this));

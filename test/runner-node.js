@@ -9,7 +9,7 @@ requirejs.config({
   baseUrl: __dirname,
   paths: {
     eight: '../src/eight',
-    cs: '../bower_components/require-cs/cs'
+    cs: '../vendor/require-cs/cs'
   }
 });
 

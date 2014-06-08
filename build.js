@@ -7,13 +7,13 @@ requirejs.config({
 
   // specify custom module name paths
   paths: {
-    "cs": "../bower_components/require-cs/cs",
-    "coffee-script": "../bower_components/coffee-script/extras/coffee-script",
+    "cs": "../vendor/require-cs/cs",
+    "coffee-script": "../vendor/coffee-script/extras/coffee-script",
     "spec": "../test/spec"
   },
 
   // target amd loader shim as the main module, path is relative to baseUrl.
-  name: "../bower_components/almond/almond",
+  name: "../vendor/almond/almond",
 
   optimize: "none",
 
@@ -39,7 +39,7 @@ requirejs.config({
            "    }(globalDefine));\n"+
            "  } else {\n"+
                 // define library on global namespace for inline script loading
-           "    global['eight'] = library;\n"+
+           "    global['EIGHT'] = library;\n"+
            "  }\n"+
            "}(this));\n"
   },
