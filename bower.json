@@ -1,0 +1,23 @@
+{
+  "name": "eight",
+  "version": "0.0.1",
+  "main": "dist/eight.js",
+  "ignore": [
+    "app",
+    "config",
+    "spec",
+    "tasks",
+    ".travis.yml",
+    "grunt.js",
+    "main.js",
+    "package.json"
+  ],
+  "dependencies": {
+  },
+  "devDependencies": {
+    "r.js": "~2.1.14",
+    "requirejs": "~2.1.14",
+    "require-cs": "~0.4.4",
+    "almond": "~0.2.9"
+  }
+}

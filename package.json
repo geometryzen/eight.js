@@ -1,0 +1,40 @@
+{
+  "name": "eight",
+  "description": "WebGl and Geometric Algebra.",
+  "version": "0.0.1",
+  "homepage": "http://github.com/geometryzen/eight",
+  "author": "David Holmes",
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://github.com/geometryzen/eight/blob/master/LICENSE"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/geometryzen/eight.git"
+  },
+  "engines": {
+    "node": ">=0.6.0"
+  },
+  "keywords": [
+    "requirejs",
+    "library",
+    "boilerplate",
+    "eight",
+    "template"
+  ],
+  "dependencies": {
+  },
+  "scripts": {
+    "test": "grunt test"
+  },
+  "devDependencies": {
+    "grunt": "~0.3.16",
+    "grunt-contrib-requirejs": "~0.3.2",
+    "grunt-jasmine-task": "*",
+    "requirejs": "~2.1.0",
+    "coffee-script": "*",
+    "servedir": "*"
+  }
+}
