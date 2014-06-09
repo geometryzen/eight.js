@@ -69,9 +69,41 @@ define(function() {
     8,2,0
   ];
 
-  var Mesh = function(gl, program) {
+  var angle = 0.01;
 
-    this.program = program;
+  function makeShader(src, type)
+  {
+    var shader = gl.createShader(type);
+    gl.shaderSource(shader, src);
+    gl.compileShader(shader);
+
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS))
+    {
+      alert("Error compiling shader: " + gl.getShaderInfoLog(shader));
+    }
+    return shader;
+  }
+
+  var Mesh = function(gl, vs_source, fs_source) {
+
+    var vs = makeShader(vs_source, gl.VERTEX_SHADER);
+    var fs = makeShader(fs_source, gl.FRAGMENT_SHADER);
+    
+    //create program
+    this.program = gl.createProgram();
+    
+    //attach and link shaders to the program
+    gl.attachShader(this.program, vs);
+    gl.attachShader(this.program, fs);
+    gl.linkProgram(this.program);
+
+    if (!gl.getProgramParameter(this.program, gl.LINK_STATUS))
+    {
+      alert("Unable to initialize the shader program.");
+    }
+
+    //use program
+    gl.useProgram(this.program);
 
     this.vbc = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbc);
@@ -84,16 +116,31 @@ define(function() {
     this.vbi = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.vbi);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(triangleVertexIndices), gl.STATIC_DRAW);
+
+    this.mvMatrix = mat4.create();
+
+    this.mvMatrixUniform = gl.getUniformLocation(this.program, "uMVMatrix");
   }
 
+  Mesh.prototype.move = function() {
+
+    mat4.identity(this.mvMatrix);
+    mat4.translate(this.mvMatrix, this.mvMatrix, [-1.0, -1.0, -7.0]);
+    mat4.rotate(this.mvMatrix, this.mvMatrix, angle, [0.0, 1.0, 0.0]);
+    angle += 0.01;
+
+  };
+
   Mesh.prototype.draw = function(gl) {
+
+    gl.uniformMatrix4fv(this.mvMatrixUniform, false, this.mvMatrix);
 
     var vertexPositionAttribute = gl.getAttribLocation(this.program, "aVertexPosition");
     gl.enableVertexAttribArray(vertexPositionAttribute);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
     gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
 
-    var vertexColorAttribute = gl.getAttribLocation(glProgram, "aVertexColor");
+    var vertexColorAttribute = gl.getAttribLocation(this.program, "aVertexColor");
     gl.enableVertexAttribArray(vertexColorAttribute);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbc);
     gl.vertexAttribPointer(vertexColorAttribute, 3, gl.FLOAT, false, 0, 0);

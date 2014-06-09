@@ -454,8 +454,7 @@ define('cs',{load: function(id){throw new Error("Dynamic load not allowed: " + i
 define('eight/cameras/Camera',[],function() {
 
   var Camera = function() {
-    console.log("Hello, Camera!");
-  }
+  };
 
   return Camera;
 
@@ -463,9 +462,8 @@ define('eight/cameras/Camera',[],function() {
 define('eight/renderers/WebGLRenderer',[],function() {
 
   var WebGLRenderer = function(context) {
-    console.log("Hello, WebGLRenderer!");
     this.context = context;
-  }
+  };
 
   WebGLRenderer.prototype.clearColor = function(r,g,b,a) {
     this.context.clearColor(r,g,b,a);
@@ -477,13 +475,12 @@ define('eight/renderers/WebGLRenderer',[],function() {
 define('eight/scenes/Scene',[],function() {
 
   var Scene = function() {
-    console.log("Hello, Scene!");
-  }
+  };
 
   return Scene;
 
 });
-define('eight/objects/Mesh',[],function() {
+define('eight/objects/Prism',[],function() {
 
   var triangleVerticeColors = [ 
     //front face  
@@ -554,9 +551,41 @@ define('eight/objects/Mesh',[],function() {
     8,2,0
   ];
 
-  var Mesh = function(gl, program) {
+  var angle = 0.01;
 
-    this.program = program;
+  function makeShader(src, type)
+  {
+    var shader = gl.createShader(type);
+    gl.shaderSource(shader, src);
+    gl.compileShader(shader);
+
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS))
+    {
+      alert("Error compiling shader: " + gl.getShaderInfoLog(shader));
+    }
+    return shader;
+  }
+
+  var Mesh = function(gl, vs_source, fs_source) {
+
+    var vs = makeShader(vs_source, gl.VERTEX_SHADER);
+    var fs = makeShader(fs_source, gl.FRAGMENT_SHADER);
+    
+    //create program
+    this.program = gl.createProgram();
+    
+    //attach and link shaders to the program
+    gl.attachShader(this.program, vs);
+    gl.attachShader(this.program, fs);
+    gl.linkProgram(this.program);
+
+    if (!gl.getProgramParameter(this.program, gl.LINK_STATUS))
+    {
+      alert("Unable to initialize the shader program.");
+    }
+
+    //use program
+    gl.useProgram(this.program);
 
     this.vbc = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbc);
@@ -569,16 +598,31 @@ define('eight/objects/Mesh',[],function() {
     this.vbi = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.vbi);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(triangleVertexIndices), gl.STATIC_DRAW);
+
+    this.mvMatrix = mat4.create();
+
+    this.mvMatrixUniform = gl.getUniformLocation(this.program, "uMVMatrix");
   }
 
+  Mesh.prototype.move = function() {
+
+    mat4.identity(this.mvMatrix);
+    mat4.translate(this.mvMatrix, this.mvMatrix, [-1.0, -1.0, -7.0]);
+    mat4.rotate(this.mvMatrix, this.mvMatrix, angle, [0.0, 1.0, 0.0]);
+    angle += 0.01;
+
+  };
+
   Mesh.prototype.draw = function(gl) {
+
+    gl.uniformMatrix4fv(this.mvMatrixUniform, false, this.mvMatrix);
 
     var vertexPositionAttribute = gl.getAttribLocation(this.program, "aVertexPosition");
     gl.enableVertexAttribArray(vertexPositionAttribute);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
     gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
 
-    var vertexColorAttribute = gl.getAttribLocation(glProgram, "aVertexColor");
+    var vertexColorAttribute = gl.getAttribLocation(this.program, "aVertexColor");
     gl.enableVertexAttribArray(vertexColorAttribute);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbc);
     gl.vertexAttribPointer(vertexColorAttribute, 3, gl.FLOAT, false, 0, 0);
@@ -591,7 +635,7 @@ define('eight/objects/Mesh',[],function() {
   return Mesh;
 
 });
-define('eight',['require','eight/core','eight/feature','eight/renderers/module','cs!eight/coffeescript','eight/cameras/Camera','eight/renderers/WebGLRenderer','eight/scenes/Scene','eight/objects/Mesh'],function(require) {
+define('eight',['require','eight/core','eight/feature','eight/renderers/module','cs!eight/coffeescript','eight/cameras/Camera','eight/renderers/WebGLRenderer','eight/scenes/Scene','eight/objects/Prism'],function(require) {
   var eight = require('eight/core');
   eight.feature = require('eight/feature');
   eight.module = require('eight/renderers/module');
@@ -599,7 +643,7 @@ define('eight',['require','eight/core','eight/feature','eight/renderers/module',
   eight.Camera = require('eight/cameras/Camera');
   eight.WebGLRenderer = require('eight/renderers/WebGLRenderer');
   eight.Scene = require('eight/scenes/Scene');
-  eight.Mesh = require('eight/objects/Mesh');
+  eight.Prism = require('eight/objects/Prism');
   return eight;
 });
 

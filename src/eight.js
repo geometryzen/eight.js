@@ -6,6 +6,6 @@ define(function(require) {
   eight.Camera = require('eight/cameras/Camera');
   eight.WebGLRenderer = require('eight/renderers/WebGLRenderer');
   eight.Scene = require('eight/scenes/Scene');
-  eight.Mesh = require('eight/objects/Mesh');
+  eight.Prism = require('eight/objects/Prism');
   return eight;
 });

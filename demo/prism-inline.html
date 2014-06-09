@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>3D Mesh with Depth Test</title>
+    <title>3D Prism with Depth Test</title>
     <style>
       body{ background-color: grey; }
       canvas{ background-color: white; }
@@ -30,26 +30,20 @@
       }
     </script>
     <script>
-      var renderer;
-      var mesh;
+      var scene = new EIGHT.Scene();
+      var camera = new EIGHT.Camera();
+      var prism;
       var gl = null;
       var canvas = null;
-      var glProgram = null;
-      var fs = null;
-      var vs = null;
 
-      var mvMatrix = mat4.create(),
-        pMatrix = mat4.create();
-        
-      var angle = 0.01;
-    
+      var pMatrix = mat4.create();
+
       function initWebGL()
       {
         canvas = document.getElementById("my-canvas");
         try
         {
           gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
-          renderer = new EIGHT.WebGLRenderer(gl);
         }
         catch(e)
         {
@@ -57,93 +51,37 @@
 
         if(gl)
         {
-          new EIGHT.Scene();
-          new EIGHT.Camera();
-          initShaders();
+          var renderer = new EIGHT.WebGLRenderer(gl);
+          gl.clearColor(0.1, 0.5, 0.1, 1.0);
+          gl.enable(gl.DEPTH_TEST);
 
-          getMatrixUniforms();
+          var fs_source = document.getElementById('shader-fs').innerHTML;
+          var vs_source = document.getElementById('shader-vs').innerHTML;
+          prism = new EIGHT.Prism(gl, vs_source, fs_source);
+
+          prism.program.pMatrixUniform = gl.getUniformLocation(prism.program, "uPMatrix");
+
+          gl.viewport(0, 0, canvas.width, canvas.height);
+
+          mat4.perspective(pMatrix, 45, canvas.width / canvas.height, 0.1, 100.0);
+
           (function animLoop(){
-            setupWebGL();
-            setMatrixUniforms();
 
-            mesh.draw(gl);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+            gl.uniformMatrix4fv(prism.program.pMatrixUniform, false, pMatrix);
+
+            prism.move();
+
+            prism.draw(gl);
 
             requestAnimationFrame(animLoop);
           })();
         }
         else
         {
-          alert(  "Error: Your browser does not appear to support WebGL.");
+          alert("Error: Your browser does not appear to support WebGL.");
         }
-      }
-
-      function setupWebGL()
-      {
-        //set the clear color to a shade of green
-        renderer.clearColor(0.1, 0.5, 0.1, 1.0);  
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);  
-        gl.enable(gl.DEPTH_TEST);
-        
-        gl.viewport(0, 0, canvas.width, canvas.height);
-        mat4.perspective(pMatrix, 45, canvas.width / canvas.height, 0.1, 100.0);
-        mat4.identity(mvMatrix);
-        mat4.translate(mvMatrix, mvMatrix, [-1.0, -1.0, -7.0]);
-        mat4.rotate(mvMatrix, mvMatrix, angle, [0.0, 1.0, 0.0]);
-        angle += 0.01;
-      }
-
-      function initShaders()
-      {
-        //get shader source
-        var fs_source = document.getElementById('shader-fs').innerHTML,
-          vs_source = document.getElementById('shader-vs').innerHTML;
-
-        //compile shaders 
-        vs = makeShader(vs_source, gl.VERTEX_SHADER);
-        fs = makeShader(fs_source, gl.FRAGMENT_SHADER);
-        
-        //create program
-        glProgram = gl.createProgram();
-        
-        //attach and link shaders to the program
-        gl.attachShader(glProgram, vs);
-        gl.attachShader(glProgram, fs);
-        gl.linkProgram(glProgram);
-
-        if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS))
-        {
-          alert("Unable to initialize the shader program.");
-        }
-
-        //use program
-        gl.useProgram(glProgram);
-        mesh = new EIGHT.Mesh(gl, glProgram);
-      }
-
-      function makeShader(src, type)
-      {
-        //compile the vertex shader
-        var shader = gl.createShader(type);
-        gl.shaderSource(shader, src);
-        gl.compileShader(shader);
-
-        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS))
-        {
-          alert("Error compiling shader: " + gl.getShaderInfoLog(shader));
-        }
-        return shader;
-      }
-
-      function getMatrixUniforms()
-      {
-        glProgram.pMatrixUniform = gl.getUniformLocation(glProgram, "uPMatrix");
-        glProgram.mvMatrixUniform = gl.getUniformLocation(glProgram, "uMVMatrix");
-      }
-
-      function setMatrixUniforms()
-      {
-        gl.uniformMatrix4fv(glProgram.pMatrixUniform, false, pMatrix);
-        gl.uniformMatrix4fv(glProgram.mvMatrixUniform, false, mvMatrix);
       }
     </script>
   </head>
