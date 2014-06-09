@@ -500,6 +500,12 @@ define('eight/renderers/WebGLRenderer',[],function() {
   WebGLRenderer.prototype.render = function(scene, camera) {
     var gl = this.gl;
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    var children = scene.children;
+    for(var i = 0, length = children.length; i < length; i++) {
+      children[i].move();
+      children[i].draw(gl, camera.pMatrix);
+    }
   };
 
   WebGLRenderer.prototype.viewport = function(x, y, width, height) {
@@ -513,7 +519,12 @@ define('eight/renderers/WebGLRenderer',[],function() {
 define('eight/scenes/Scene',[],function() {
 
   var Scene = function() {
+    this.children = [];
   };
+
+  Scene.prototype.add = function(mesh) {
+    this.children.push(mesh);
+  }
 
   return Scene;
 

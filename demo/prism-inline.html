@@ -1,11 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>3D Prism with Depth Test</title>
-    <style>
-      body{ background-color: grey; }
-      canvas{ background-color: white; }
-    </style>
+    <title>Eight Demo</title>
     <script src="../vendor/gl-matrix/dist/gl-matrix.js"></script>
     <script src="../dist/eight.js"></script>
     <script>
@@ -29,13 +25,11 @@
 
           var prism = new EIGHT.Prism(gl);
 
+          scene.add(prism);
+
           (function animLoop(){
 
             renderer.render(scene, camera);
-
-            prism.move();
-
-            prism.draw(gl, camera.pMatrix);
 
             requestAnimationFrame(animLoop);
           })();

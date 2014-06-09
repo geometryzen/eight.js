@@ -14,6 +14,12 @@ define(function() {
   WebGLRenderer.prototype.render = function(scene, camera) {
     var gl = this.gl;
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    var children = scene.children;
+    for(var i = 0, length = children.length; i < length; i++) {
+      children[i].move();
+      children[i].draw(gl, camera.pMatrix);
+    }
   };
 
   WebGLRenderer.prototype.viewport = function(x, y, width, height) {
