@@ -8,39 +8,11 @@
     </style>
     <script src="../vendor/gl-matrix/dist/gl-matrix.js"></script>
     <script src="../dist/eight.js"></script>
-    <script id="shader-vs" type="x-shader/x-vertex">
-      attribute vec3 aVertexPosition;
-      attribute vec3 aVertexColor;
-
-      uniform mat4 uMVMatrix;
-      uniform mat4 uPMatrix;
-  
-      varying highp vec4 vColor;
-      void main(void)
-      {
-        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
-        vColor = vec4(aVertexColor, 1.0);
-      }
-    </script>
-    <script id="shader-fs" type="x-shader/x-fragment">
-      varying highp vec4 vColor;
-      void main(void)
-      {
-        gl_FragColor = vColor;
-      }
-    </script>
     <script>
-      var scene = new EIGHT.Scene();
-      var camera = new EIGHT.Camera();
-      var prism;
-      var gl = null;
-      var canvas = null;
-
-      var pMatrix = mat4.create();
-
       function initWebGL()
       {
-        canvas = document.getElementById("my-canvas");
+        var canvas = document.getElementById("my-canvas");
+        var gl;
         try
         {
           gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
@@ -51,29 +23,19 @@
 
         if(gl)
         {
+          var scene = new EIGHT.Scene();
+          var camera = new EIGHT.PerspectiveCamera(45, canvas.width / canvas.height, 0.1, 100.0);
           var renderer = new EIGHT.WebGLRenderer(gl);
-          gl.clearColor(0.1, 0.5, 0.1, 1.0);
-          gl.enable(gl.DEPTH_TEST);
 
-          var fs_source = document.getElementById('shader-fs').innerHTML;
-          var vs_source = document.getElementById('shader-vs').innerHTML;
-          prism = new EIGHT.Prism(gl, vs_source, fs_source);
-
-          prism.program.pMatrixUniform = gl.getUniformLocation(prism.program, "uPMatrix");
-
-          gl.viewport(0, 0, canvas.width, canvas.height);
-
-          mat4.perspective(pMatrix, 45, canvas.width / canvas.height, 0.1, 100.0);
+          var prism = new EIGHT.Prism(gl);
 
           (function animLoop(){
 
-            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-            gl.uniformMatrix4fv(prism.program.pMatrixUniform, false, pMatrix);
+            renderer.render(scene, camera);
 
             prism.move();
 
-            prism.draw(gl);
+            prism.draw(gl, camera.pMatrix);
 
             requestAnimationFrame(animLoop);
           })();

@@ -454,19 +454,57 @@ define('cs',{load: function(id){throw new Error("Dynamic load not allowed: " + i
 define('eight/cameras/Camera',[],function() {
 
   var Camera = function() {
+
+    this.pMatrix = mat4.create();
+
   };
 
   return Camera;
 
 });
-define('eight/renderers/WebGLRenderer',[],function() {
+define('eight/cameras/PerspectiveCamera',['eight/cameras/Camera'], function(Camera) {
 
-  var WebGLRenderer = function(context) {
-    this.context = context;
+  var PerspectiveCamera = function(fov, aspect, near, far) {
+
+    Camera.call(this);
+
+    this.fov = fov !== undefined ? fov : 50;
+    this.aspect = aspect !== undefined ? aspect : 1;
+    this.near = near !== undefined ? near : 0.1;
+    this.far = far !== undefined ? far : 2000;
+
+    mat4.perspective(this.pMatrix, this.fov, this.aspect, this.near, this.far);
+
+//  this.updateProjectionMatrix();
+
   };
 
-  WebGLRenderer.prototype.clearColor = function(r,g,b,a) {
-    this.context.clearColor(r,g,b,a);
+  PerspectiveCamera.prototype = Object.create(Camera.prototype);
+
+  return PerspectiveCamera;
+
+});
+define('eight/renderers/WebGLRenderer',[],function() {
+
+  var WebGLRenderer = function(gl) {
+    this.gl = gl;
+    gl.clearColor(32/256, 32/256, 32/256, 1.0);
+    gl.enable(gl.DEPTH_TEST);
+  };
+
+  WebGLRenderer.prototype.clearColor = function(r, g, b, a) {
+    var gl = this.gl;
+    gl.clearColor(r, g, b, a);
+  };
+
+  WebGLRenderer.prototype.render = function(scene, camera) {
+    var gl = this.gl;
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  };
+
+  WebGLRenderer.prototype.viewport = function(x, y, width, height) {
+    var gl = this.gl;
+    gl.viewport(x, y, width, height);
   };
 
   return WebGLRenderer;
@@ -480,7 +518,34 @@ define('eight/scenes/Scene',[],function() {
   return Scene;
 
 });
-define('eight/objects/Prism',[],function() {
+define('eight/shaders/shader-vs',[],function() {
+  var source = [
+    "attribute vec3 aVertexPosition;",
+    "attribute vec3 aVertexColor;",
+
+    "uniform mat4 uMVMatrix;",
+    "uniform mat4 uPMatrix;",
+
+    "varying highp vec4 vColor;",
+    "void main(void)",
+    "{",
+      "gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);",
+      "vColor = vec4(aVertexColor, 1.0);",
+    "}"
+  ].join('\n');
+  return source;
+});
+define('eight/shaders/shader-fs',[],function() {
+  var source = [
+    "varying highp vec4 vColor;",
+    "void main(void)",
+    "{",
+    "  gl_FragColor = vColor;",
+    "}"
+  ].join('\n');
+  return source;
+});
+define('eight/objects/Prism',['eight/shaders/shader-vs', 'eight/shaders/shader-fs'], function(vs_source, fs_source) {
 
   var triangleVerticeColors = [ 
     //front face  
@@ -553,39 +618,32 @@ define('eight/objects/Prism',[],function() {
 
   var angle = 0.01;
 
-  function makeShader(src, type)
-  {
+  function makeShader(gl, src, type) {
     var shader = gl.createShader(type);
+
     gl.shaderSource(shader, src);
     gl.compileShader(shader);
 
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS))
-    {
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
       alert("Error compiling shader: " + gl.getShaderInfoLog(shader));
     }
     return shader;
   }
 
-  var Mesh = function(gl, vs_source, fs_source) {
+  var Prism = function(gl) {
 
-    var vs = makeShader(vs_source, gl.VERTEX_SHADER);
-    var fs = makeShader(fs_source, gl.FRAGMENT_SHADER);
+    var vs = makeShader(gl, vs_source, gl.VERTEX_SHADER);
+    var fs = makeShader(gl, fs_source, gl.FRAGMENT_SHADER);
     
-    //create program
     this.program = gl.createProgram();
     
-    //attach and link shaders to the program
     gl.attachShader(this.program, vs);
     gl.attachShader(this.program, fs);
     gl.linkProgram(this.program);
 
-    if (!gl.getProgramParameter(this.program, gl.LINK_STATUS))
-    {
-      alert("Unable to initialize the shader program.");
+    if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
+      alert("Error linking program: " + gl.getProgramInfoLog(this.program));
     }
-
-    //use program
-    gl.useProgram(this.program);
 
     this.vbc = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbc);
@@ -602,9 +660,10 @@ define('eight/objects/Prism',[],function() {
     this.mvMatrix = mat4.create();
 
     this.mvMatrixUniform = gl.getUniformLocation(this.program, "uMVMatrix");
+    this.pMatrixUniform  = gl.getUniformLocation(this.program, "uPMatrix");
   }
 
-  Mesh.prototype.move = function() {
+  Prism.prototype.move = function() {
 
     mat4.identity(this.mvMatrix);
     mat4.translate(this.mvMatrix, this.mvMatrix, [-1.0, -1.0, -7.0]);
@@ -613,9 +672,12 @@ define('eight/objects/Prism',[],function() {
 
   };
 
-  Mesh.prototype.draw = function(gl) {
+  Prism.prototype.draw = function(gl, projectionMatrix) {
+
+    gl.useProgram(this.program);
 
     gl.uniformMatrix4fv(this.mvMatrixUniform, false, this.mvMatrix);
+    gl.uniformMatrix4fv(this.pMatrixUniform, false, projectionMatrix);
 
     var vertexPositionAttribute = gl.getAttribLocation(this.program, "aVertexPosition");
     gl.enableVertexAttribArray(vertexPositionAttribute);
@@ -632,18 +694,20 @@ define('eight/objects/Prism',[],function() {
 
   };
 
-  return Mesh;
+  return Prism;
 
 });
-define('eight',['require','eight/core','eight/feature','eight/renderers/module','cs!eight/coffeescript','eight/cameras/Camera','eight/renderers/WebGLRenderer','eight/scenes/Scene','eight/objects/Prism'],function(require) {
+define('eight',['require','eight/core','eight/feature','eight/renderers/module','cs!eight/coffeescript','eight/cameras/Camera','eight/cameras/PerspectiveCamera','eight/renderers/WebGLRenderer','eight/scenes/Scene','eight/objects/Prism'],function(require) {
   var eight = require('eight/core');
   eight.feature = require('eight/feature');
   eight.module = require('eight/renderers/module');
   eight.coffeescript = require('cs!eight/coffeescript');
   eight.Camera = require('eight/cameras/Camera');
+  eight.PerspectiveCamera = require('eight/cameras/PerspectiveCamera');
   eight.WebGLRenderer = require('eight/renderers/WebGLRenderer');
   eight.Scene = require('eight/scenes/Scene');
   eight.Prism = require('eight/objects/Prism');
+//eight.vs_source = require('eight/shaders/shader-vs');
   return eight;
 });
 

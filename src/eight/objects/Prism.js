@@ -1,4 +1,4 @@
-define(function() {
+define(['eight/shaders/shader-vs', 'eight/shaders/shader-fs'], function(vs_source, fs_source) {
 
   var triangleVerticeColors = [ 
     //front face  
@@ -71,39 +71,32 @@ define(function() {
 
   var angle = 0.01;
 
-  function makeShader(src, type)
-  {
+  function makeShader(gl, src, type) {
     var shader = gl.createShader(type);
+
     gl.shaderSource(shader, src);
     gl.compileShader(shader);
 
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS))
-    {
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
       alert("Error compiling shader: " + gl.getShaderInfoLog(shader));
     }
     return shader;
   }
 
-  var Mesh = function(gl, vs_source, fs_source) {
+  var Prism = function(gl) {
 
-    var vs = makeShader(vs_source, gl.VERTEX_SHADER);
-    var fs = makeShader(fs_source, gl.FRAGMENT_SHADER);
+    var vs = makeShader(gl, vs_source, gl.VERTEX_SHADER);
+    var fs = makeShader(gl, fs_source, gl.FRAGMENT_SHADER);
     
-    //create program
     this.program = gl.createProgram();
     
-    //attach and link shaders to the program
     gl.attachShader(this.program, vs);
     gl.attachShader(this.program, fs);
     gl.linkProgram(this.program);
 
-    if (!gl.getProgramParameter(this.program, gl.LINK_STATUS))
-    {
-      alert("Unable to initialize the shader program.");
+    if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
+      alert("Error linking program: " + gl.getProgramInfoLog(this.program));
     }
-
-    //use program
-    gl.useProgram(this.program);
 
     this.vbc = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbc);
@@ -120,9 +113,10 @@ define(function() {
     this.mvMatrix = mat4.create();
 
     this.mvMatrixUniform = gl.getUniformLocation(this.program, "uMVMatrix");
+    this.pMatrixUniform  = gl.getUniformLocation(this.program, "uPMatrix");
   }
 
-  Mesh.prototype.move = function() {
+  Prism.prototype.move = function() {
 
     mat4.identity(this.mvMatrix);
     mat4.translate(this.mvMatrix, this.mvMatrix, [-1.0, -1.0, -7.0]);
@@ -131,9 +125,12 @@ define(function() {
 
   };
 
-  Mesh.prototype.draw = function(gl) {
+  Prism.prototype.draw = function(gl, projectionMatrix) {
+
+    gl.useProgram(this.program);
 
     gl.uniformMatrix4fv(this.mvMatrixUniform, false, this.mvMatrix);
+    gl.uniformMatrix4fv(this.pMatrixUniform, false, projectionMatrix);
 
     var vertexPositionAttribute = gl.getAttribLocation(this.program, "aVertexPosition");
     gl.enableVertexAttribArray(vertexPositionAttribute);
@@ -150,6 +147,6 @@ define(function() {
 
   };
 
-  return Mesh;
+  return Prism;
 
 });
