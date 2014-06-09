@@ -85,13 +85,14 @@ define(['eight/shaders/shader-vs', 'eight/shaders/shader-fs'], function(vs_sourc
 
   var Prism = function(gl) {
 
-    var vs = makeShader(gl, vs_source, gl.VERTEX_SHADER);
-    var fs = makeShader(gl, fs_source, gl.FRAGMENT_SHADER);
+    this.gl = gl;
+    this.vs = makeShader(gl, vs_source, gl.VERTEX_SHADER);
+    this.fs = makeShader(gl, fs_source, gl.FRAGMENT_SHADER);
     
     this.program = gl.createProgram();
     
-    gl.attachShader(this.program, vs);
-    gl.attachShader(this.program, fs);
+    gl.attachShader(this.program, this.vs);
+    gl.attachShader(this.program, this.fs);
     gl.linkProgram(this.program);
 
     if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
@@ -115,6 +116,16 @@ define(['eight/shaders/shader-vs', 'eight/shaders/shader-fs'], function(vs_sourc
     this.mvMatrixUniform = gl.getUniformLocation(this.program, "uMVMatrix");
     this.pMatrixUniform  = gl.getUniformLocation(this.program, "uPMatrix");
   }
+
+  Prism.prototype.tearDown = function() {
+    var gl = this.gl;
+    gl.deleteShader(this.vs);
+    delete this.vs;
+    gl.deleteShader(this.fs);
+    delete this.fs;
+    gl.deleteProgram(this.program);
+    delete this.program;
+  };
 
   Prism.prototype.move = function() {
 

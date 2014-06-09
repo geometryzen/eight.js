@@ -4,6 +4,7 @@
     <title>Eight Demo</title>
     <script src="../vendor/gl-matrix/dist/gl-matrix.js"></script>
     <script src="../dist/eight.js"></script>
+    <script src="../vendor/stats.js/build/stats.min.js"></script>
     <script>
       function initWebGL()
       {
@@ -22,17 +23,41 @@
           var scene = new EIGHT.Scene();
           var camera = new EIGHT.PerspectiveCamera(45, canvas.width / canvas.height, 0.1, 100.0);
           var renderer = new EIGHT.WebGLRenderer(gl);
+          var stats = new Stats();
+          stats.setMode(0);
+          stats.domElement.style.position = 'absolute';
+          stats.domElement.style.left = '0px';
+          stats.domElement.style.top = '0px';
+          document.body.appendChild(stats.domElement);
 
           var prism = new EIGHT.Prism(gl);
 
           scene.add(prism);
 
-          (function animLoop(){
-
+          var tick = function(time)
+          {
+            stats.begin();
             renderer.render(scene, camera);
+            stats.end();
+          };
 
-            requestAnimationFrame(animLoop);
-          })();
+          var terminate = function(time)
+          {
+            return time > 15;
+          };
+
+          var setUp = function()
+          {
+          };
+
+          var tearDown = function()
+          {
+            scene.tearDown();
+          };
+
+          var war = new EIGHT.WindowAnimationRunner(tick, terminate, setUp, tearDown, window);
+
+          war.start();
         }
         else
         {
@@ -42,7 +67,7 @@
     </script>
   </head>
   <body onload="initWebGL()">
-    <canvas id="my-canvas" width="400" height="300">
+    <canvas id="my-canvas" width="800" height="600">
       Your browser does not support the HTML5 canvas element.
     </canvas>
   </body>

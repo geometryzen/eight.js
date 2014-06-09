@@ -9,7 +9,7 @@ define(['eight/cameras/Camera'], function(Camera) {
     this.near = near !== undefined ? near : 0.1;
     this.far = far !== undefined ? far : 2000;
 
-    mat4.perspective(this.pMatrix, this.fov, this.aspect, this.near, this.far);
+    mat4.perspective(this.projectionMatrix, this.fov, this.aspect, this.near, this.far);
 
 //  this.updateProjectionMatrix();
 

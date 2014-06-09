@@ -8,6 +8,13 @@ define(function() {
     this.children.push(mesh);
   }
 
+  Scene.prototype.tearDown = function() {
+    var children = this.children;
+    for(var i = 0, length = children.length; i < length; i++) {
+      children[i].tearDown();
+    }
+  }
+
   return Scene;
 
 });

@@ -455,7 +455,7 @@ define('eight/cameras/Camera',[],function() {
 
   var Camera = function() {
 
-    this.pMatrix = mat4.create();
+    this.projectionMatrix = mat4.create();
 
   };
 
@@ -473,7 +473,7 @@ define('eight/cameras/PerspectiveCamera',['eight/cameras/Camera'], function(Came
     this.near = near !== undefined ? near : 0.1;
     this.far = far !== undefined ? far : 2000;
 
-    mat4.perspective(this.pMatrix, this.fov, this.aspect, this.near, this.far);
+    mat4.perspective(this.projectionMatrix, this.fov, this.aspect, this.near, this.far);
 
 //  this.updateProjectionMatrix();
 
@@ -504,7 +504,7 @@ define('eight/renderers/WebGLRenderer',[],function() {
     var children = scene.children;
     for(var i = 0, length = children.length; i < length; i++) {
       children[i].move();
-      children[i].draw(gl, camera.pMatrix);
+      children[i].draw(gl, camera.projectionMatrix);
     }
   };
 
@@ -524,6 +524,13 @@ define('eight/scenes/Scene',[],function() {
 
   Scene.prototype.add = function(mesh) {
     this.children.push(mesh);
+  }
+
+  Scene.prototype.tearDown = function() {
+    var children = this.children;
+    for(var i = 0, length = children.length; i < length; i++) {
+      children[i].tearDown();
+    }
   }
 
   return Scene;
@@ -643,13 +650,14 @@ define('eight/objects/Prism',['eight/shaders/shader-vs', 'eight/shaders/shader-f
 
   var Prism = function(gl) {
 
-    var vs = makeShader(gl, vs_source, gl.VERTEX_SHADER);
-    var fs = makeShader(gl, fs_source, gl.FRAGMENT_SHADER);
+    this.gl = gl;
+    this.vs = makeShader(gl, vs_source, gl.VERTEX_SHADER);
+    this.fs = makeShader(gl, fs_source, gl.FRAGMENT_SHADER);
     
     this.program = gl.createProgram();
     
-    gl.attachShader(this.program, vs);
-    gl.attachShader(this.program, fs);
+    gl.attachShader(this.program, this.vs);
+    gl.attachShader(this.program, this.fs);
     gl.linkProgram(this.program);
 
     if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
@@ -673,6 +681,16 @@ define('eight/objects/Prism',['eight/shaders/shader-vs', 'eight/shaders/shader-f
     this.mvMatrixUniform = gl.getUniformLocation(this.program, "uMVMatrix");
     this.pMatrixUniform  = gl.getUniformLocation(this.program, "uPMatrix");
   }
+
+  Prism.prototype.tearDown = function() {
+    var gl = this.gl;
+    gl.deleteShader(this.vs);
+    delete this.vs;
+    gl.deleteShader(this.fs);
+    delete this.fs;
+    gl.deleteProgram(this.program);
+    delete this.program;
+  };
 
   Prism.prototype.move = function() {
 
@@ -708,7 +726,81 @@ define('eight/objects/Prism',['eight/shaders/shader-vs', 'eight/shaders/shader-f
   return Prism;
 
 });
-define('eight',['require','eight/core','eight/feature','eight/renderers/module','cs!eight/coffeescript','eight/cameras/Camera','eight/cameras/PerspectiveCamera','eight/renderers/WebGLRenderer','eight/scenes/Scene','eight/objects/Prism'],function(require) {
+define('eight/utils/WindowAnimationRunner',[],function()
+{
+
+  var WindowAnimationRunner = function(tick, terminate, setUp, tearDown, win)
+  {
+    this.tick = tick;
+    this.terminate = terminate;
+    this.setUp = setUp;
+    this.tearDown = tearDown;
+    this.window = win;
+    this.escKeyPressed = false;
+  };
+
+  WindowAnimationRunner.prototype.start = function()
+  {
+    var MILLIS_PER_SECOND = 1000;
+    var self = this;
+
+    var onDocumentKeyDown = function(event)
+    {
+      if (event.keyCode == 27)
+      {
+        self.escKeyPressed = true;
+        event.preventDefault();
+      }
+    };
+
+    var animate = function(timestamp)
+    {
+      if (self.startTime)
+      {
+        self.elapsed = timestamp - self.startTime;
+      }
+      else
+      {
+        self.startTime = timestamp;
+        self.elapsed = 0;
+      }
+      var terminate = self.terminate;
+      if (self.escKeyPressed || terminate(self.elapsed / MILLIS_PER_SECOND))
+      {
+        self.window.cancelAnimationFrame(self.requestID);
+        self.window.document.removeEventListener('keydown', onDocumentKeyDown, false);
+        try
+        {
+          self.tearDown(self.exception);
+        }
+        catch(e)
+        {
+          console.log(e);
+        }
+      }
+      else
+      {
+        self.requestID = self.window.requestAnimationFrame(animate);
+        try
+        {
+          self.tick(self.elapsed / MILLIS_PER_SECOND);
+        }
+        catch(e)
+        {
+          self.exception = e;
+          self.escKeyPressed = true;
+        }
+      }
+    };
+    self.setUp();
+    self.window.document.addEventListener('keydown', onDocumentKeyDown, false);
+    self.requestID = self.window.requestAnimationFrame(animate);
+  }
+
+  return WindowAnimationRunner;
+
+});
+define('eight',['require','eight/core','eight/feature','eight/renderers/module','cs!eight/coffeescript','eight/cameras/Camera','eight/cameras/PerspectiveCamera','eight/renderers/WebGLRenderer','eight/scenes/Scene','eight/objects/Prism','eight/utils/WindowAnimationRunner'],function(require) {
   var eight = require('eight/core');
   eight.feature = require('eight/feature');
   eight.module = require('eight/renderers/module');
@@ -718,7 +810,7 @@ define('eight',['require','eight/core','eight/feature','eight/renderers/module',
   eight.WebGLRenderer = require('eight/renderers/WebGLRenderer');
   eight.Scene = require('eight/scenes/Scene');
   eight.Prism = require('eight/objects/Prism');
-//eight.vs_source = require('eight/shaders/shader-vs');
+  eight.WindowAnimationRunner = require('eight/utils/WindowAnimationRunner');
   return eight;
 });
 

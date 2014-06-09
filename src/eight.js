@@ -8,6 +8,6 @@ define(function(require) {
   eight.WebGLRenderer = require('eight/renderers/WebGLRenderer');
   eight.Scene = require('eight/scenes/Scene');
   eight.Prism = require('eight/objects/Prism');
-//eight.vs_source = require('eight/shaders/shader-vs');
+  eight.WindowAnimationRunner = require('eight/utils/WindowAnimationRunner');
   return eight;
 });
