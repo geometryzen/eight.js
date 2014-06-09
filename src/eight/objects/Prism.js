@@ -71,20 +71,27 @@ define(['eight/shaders/shader-vs', 'eight/shaders/shader-fs'], function(vs_sourc
 
   var angle = 0.01;
 
-  function makeShader(gl, src, type) {
+  function makeShader(gl, src, type)
+  {
     var shader = gl.createShader(type);
-
     gl.shaderSource(shader, src);
     gl.compileShader(shader);
 
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      alert("Error compiling shader: " + gl.getShaderInfoLog(shader));
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS) && !gl.isContextLost())
+    {
+      var infoLog = gl.getShaderInfoLog(shader);
+      alert("Error compiling shader:\n" + infoLog);
     }
     return shader;
   }
 
-  var Prism = function(gl) {
+  var Prism = function()
+  {
+    this.mvMatrix = mat4.create();
+  }
 
+  Prism.prototype.onContextGain = function(gl)
+  {
     this.gl = gl;
     this.vs = makeShader(gl, vs_source, gl.VERTEX_SHADER);
     this.fs = makeShader(gl, fs_source, gl.FRAGMENT_SHADER);
@@ -95,8 +102,10 @@ define(['eight/shaders/shader-vs', 'eight/shaders/shader-fs'], function(vs_sourc
     gl.attachShader(this.program, this.fs);
     gl.linkProgram(this.program);
 
-    if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
-      alert("Error linking program: " + gl.getProgramInfoLog(this.program));
+    if (!gl.getProgramParameter(this.program, gl.LINK_STATUS) && !gl.isContextLost())
+    {
+      var infoLog = gl.getProgramInfoLog(this.program);
+      alert("Error linking program:\n" + infoLog);
     }
 
     this.vbc = gl.createBuffer();
@@ -111,10 +120,20 @@ define(['eight/shaders/shader-vs', 'eight/shaders/shader-fs'], function(vs_sourc
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.vbi);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(triangleVertexIndices), gl.STATIC_DRAW);
 
-    this.mvMatrix = mat4.create();
-
     this.mvMatrixUniform = gl.getUniformLocation(this.program, "uMVMatrix");
     this.pMatrixUniform  = gl.getUniformLocation(this.program, "uPMatrix");
+  }
+
+  Prism.prototype.onContextLoss = function()
+  {
+    delete this.vs;
+    delete this.fs;
+    delete this.program;
+    delete this.vbc;
+    delete this.vbo;
+    delete this.vbi;
+    delete this.mvMatrixUniform;
+    delete this.pMatrixUniform;
   }
 
   Prism.prototype.tearDown = function() {

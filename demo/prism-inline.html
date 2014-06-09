@@ -2,6 +2,8 @@
 <html>
   <head>
     <title>Eight Demo</title>
+    <!-- Don't use webgl-debug.js outside of development. -->
+    <!--script src="../manual-deps/khronos/webgl-debug.js"></script-->
     <script src="../vendor/gl-matrix/dist/gl-matrix.js"></script>
     <script src="../dist/eight.js"></script>
     <script src="../vendor/stats.js/build/stats.min.js"></script>
@@ -9,60 +11,75 @@
       function initWebGL()
       {
         var canvas = document.getElementById("my-canvas");
-        var gl;
-        try
+        if (typeof WebGLDebugUtils !== 'undefined')
         {
-          gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+          canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas(canvas);
+          // canvas.loseContextInNCalls(1000);
+          // canvas.setRestoreTimeout(3000);
         }
-        catch(e)
+        var scene = new EIGHT.Scene();
+        var renderer = new EIGHT.WebGLRenderer();
+
+        var stats = new Stats();
+        stats.setMode(0);
+        stats.domElement.style.position = 'absolute';
+        stats.domElement.style.left = '0px';
+        stats.domElement.style.top = '0px';
+        document.body.appendChild(stats.domElement);
+
+        var tick = function(time)
         {
-        }
-
-        if(gl)
+          stats.begin();
+          renderer.render(scene, camera);
+          stats.end();
+        };
+        var terminate = function(time)
         {
-          var scene = new EIGHT.Scene();
-          var camera = new EIGHT.PerspectiveCamera(45, canvas.width / canvas.height, 0.1, 100.0);
-          var renderer = new EIGHT.WebGLRenderer(gl);
-          var stats = new Stats();
-          stats.setMode(0);
-          stats.domElement.style.position = 'absolute';
-          stats.domElement.style.left = '0px';
-          stats.domElement.style.top = '0px';
-          document.body.appendChild(stats.domElement);
+          return false;
+        };
+        var setUp = function()
+        {
+          monitor.start();
+        };
 
-          var prism = new EIGHT.Prism(gl);
+        var tearDown = function()
+        {
+          monitor.stop();
+          scene.tearDown();
+        };
+        var war = new EIGHT.WindowAnimationRunner(tick, terminate, setUp, tearDown, window);
+        var camera = new EIGHT.PerspectiveCamera(45, canvas.width / canvas.height, 0.1, 100.0);
 
-          scene.add(prism);
+        var prism = new EIGHT.Prism();
 
-          var tick = function(time)
-          {
-            stats.begin();
-            renderer.render(scene, camera);
-            stats.end();
-          };
+        scene.add(prism);
 
-          var terminate = function(time)
-          {
-            return time > 15;
-          };
+        var onContextLoss = function()
+        {
+          war.stop();
+          renderer.onContextLoss();
+          scene.onContextLoss();
+        };
 
-          var setUp = function()
-          {
-          };
-
-          var tearDown = function()
-          {
-            scene.tearDown();
-          };
-
-          var war = new EIGHT.WindowAnimationRunner(tick, terminate, setUp, tearDown, window);
-
+        var onContextGain = function(gl)
+        {
+          scene.onContextGain(gl);
+          renderer.onContextGain(gl);
           war.start();
-        }
-        else
+        };
+
+        var monitor = new EIGHT.WebGLContextMonitor(canvas, onContextLoss, onContextGain);
+
+        var ctx = canvas.getContext('webgl');
+        if (typeof WebGLDebugUtils !== 'undefined')
         {
-          alert("Error: Your browser does not appear to support WebGL.");
+          var logGLCall = function(functionName, args)
+          {
+//           console.log("gl." + functionName + "(" + WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")");
+          }
+          ctx = WebGLDebugUtils.makeDebugContext(ctx, undefined, logGLCall);
         }
+        onContextGain(ctx);
       }
     </script>
   </head>

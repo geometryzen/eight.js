@@ -486,18 +486,30 @@ define('eight/cameras/PerspectiveCamera',['eight/cameras/Camera'], function(Came
 });
 define('eight/renderers/WebGLRenderer',[],function() {
 
-  var WebGLRenderer = function(gl) {
+  var WebGLRenderer = function()
+  {
+  };
+
+  WebGLRenderer.prototype.onContextGain = function(gl)
+  {
     this.gl = gl;
     gl.clearColor(32/256, 32/256, 32/256, 1.0);
     gl.enable(gl.DEPTH_TEST);
   };
 
-  WebGLRenderer.prototype.clearColor = function(r, g, b, a) {
+  WebGLRenderer.prototype.onContextLoss = function()
+  {
+    delete this.gl;
+  };
+
+  WebGLRenderer.prototype.clearColor = function(r, g, b, a)
+  {
     var gl = this.gl;
     gl.clearColor(r, g, b, a);
   };
 
-  WebGLRenderer.prototype.render = function(scene, camera) {
+  WebGLRenderer.prototype.render = function(scene, camera)
+  {
     var gl = this.gl;
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -508,7 +520,8 @@ define('eight/renderers/WebGLRenderer',[],function() {
     }
   };
 
-  WebGLRenderer.prototype.viewport = function(x, y, width, height) {
+  WebGLRenderer.prototype.viewport = function(x, y, width, height)
+  {
     var gl = this.gl;
     gl.viewport(x, y, width, height);
   };
@@ -524,6 +537,20 @@ define('eight/scenes/Scene',[],function() {
 
   Scene.prototype.add = function(mesh) {
     this.children.push(mesh);
+  }
+
+  Scene.prototype.onContextGain = function(gl) {
+    var children = this.children;
+    for(var i = 0, length = children.length; i < length; i++) {
+      children[i].onContextGain(gl);
+    }
+  }
+
+  Scene.prototype.onContextLoss = function() {
+    var children = this.children;
+    for(var i = 0, length = children.length; i < length; i++) {
+      children[i].onContextLoss();
+    }
   }
 
   Scene.prototype.tearDown = function() {
@@ -636,20 +663,27 @@ define('eight/objects/Prism',['eight/shaders/shader-vs', 'eight/shaders/shader-f
 
   var angle = 0.01;
 
-  function makeShader(gl, src, type) {
+  function makeShader(gl, src, type)
+  {
     var shader = gl.createShader(type);
-
     gl.shaderSource(shader, src);
     gl.compileShader(shader);
 
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      alert("Error compiling shader: " + gl.getShaderInfoLog(shader));
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS) && !gl.isContextLost())
+    {
+      var infoLog = gl.getShaderInfoLog(shader);
+      alert("Error compiling shader:\n" + infoLog);
     }
     return shader;
   }
 
-  var Prism = function(gl) {
+  var Prism = function()
+  {
+    this.mvMatrix = mat4.create();
+  }
 
+  Prism.prototype.onContextGain = function(gl)
+  {
     this.gl = gl;
     this.vs = makeShader(gl, vs_source, gl.VERTEX_SHADER);
     this.fs = makeShader(gl, fs_source, gl.FRAGMENT_SHADER);
@@ -660,8 +694,10 @@ define('eight/objects/Prism',['eight/shaders/shader-vs', 'eight/shaders/shader-f
     gl.attachShader(this.program, this.fs);
     gl.linkProgram(this.program);
 
-    if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
-      alert("Error linking program: " + gl.getProgramInfoLog(this.program));
+    if (!gl.getProgramParameter(this.program, gl.LINK_STATUS) && !gl.isContextLost())
+    {
+      var infoLog = gl.getProgramInfoLog(this.program);
+      alert("Error linking program:\n" + infoLog);
     }
 
     this.vbc = gl.createBuffer();
@@ -676,10 +712,20 @@ define('eight/objects/Prism',['eight/shaders/shader-vs', 'eight/shaders/shader-f
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.vbi);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(triangleVertexIndices), gl.STATIC_DRAW);
 
-    this.mvMatrix = mat4.create();
-
     this.mvMatrixUniform = gl.getUniformLocation(this.program, "uMVMatrix");
     this.pMatrixUniform  = gl.getUniformLocation(this.program, "uPMatrix");
+  }
+
+  Prism.prototype.onContextLoss = function()
+  {
+    delete this.vs;
+    delete this.fs;
+    delete this.program;
+    delete this.vbc;
+    delete this.vbo;
+    delete this.vbi;
+    delete this.mvMatrixUniform;
+    delete this.pMatrixUniform;
   }
 
   Prism.prototype.tearDown = function() {
@@ -751,6 +797,16 @@ define('eight/utils/WindowAnimationRunner',[],function()
         self.escKeyPressed = true;
         event.preventDefault();
       }
+      else if (event.keyCode == 19)
+      {
+        self.pauseKeyPressed = true;
+        event.preventDefault();
+      }
+      else if (event.keyCode == 13)
+      {
+        self.enterKeyPressed = true;
+        event.preventDefault();
+      }
     };
 
     var animate = function(timestamp)
@@ -767,6 +823,7 @@ define('eight/utils/WindowAnimationRunner',[],function()
       var terminate = self.terminate;
       if (self.escKeyPressed || terminate(self.elapsed / MILLIS_PER_SECOND))
       {
+        delete self.escKeyPressed;
         self.window.cancelAnimationFrame(self.requestID);
         self.window.document.removeEventListener('keydown', onDocumentKeyDown, false);
         try
@@ -797,10 +854,51 @@ define('eight/utils/WindowAnimationRunner',[],function()
     self.requestID = self.window.requestAnimationFrame(animate);
   }
 
+  WindowAnimationRunner.prototype.stop = function()
+  {
+    this.escKeyPressed = true;
+  }
+
   return WindowAnimationRunner;
 
 });
-define('eight',['require','eight/core','eight/feature','eight/renderers/module','cs!eight/coffeescript','eight/cameras/Camera','eight/cameras/PerspectiveCamera','eight/renderers/WebGLRenderer','eight/scenes/Scene','eight/objects/Prism','eight/utils/WindowAnimationRunner'],function(require) {
+define('eight/utils/WebGLContextMonitor',[],function() {
+
+  var WebGLContextMonitor = function(canvas, contextLoss, contextGain)
+  {
+    this.canvas = canvas;
+    var self = this;
+
+    this.webGLContextLost = function(event)
+    {
+      event.preventDefault();
+      contextLoss();
+    };
+
+    this.webGLContextRestored = function(event)
+    {
+      event.preventDefault();
+      self.gl = self.canvas.getContext("webgl");
+      contextGain(self.gl);
+    };
+  };
+
+  WebGLContextMonitor.prototype.start = function()
+  {
+    this.canvas.addEventListener('webglcontextlost', this.webGLContextLost, false);
+    this.canvas.addEventListener('webglcontextrestored', this.webGLContextRestored, false);
+  };
+
+  WebGLContextMonitor.prototype.stop = function()
+  {
+    this.canvas.removeEventListener('webglcontextrestored', this.webGLContextRestored, false);
+    this.canvas.removeEventListener('webglcontextlost', this.webGLContextLost, false);
+  };
+
+  return WebGLContextMonitor;
+
+});
+define('eight',['require','eight/core','eight/feature','eight/renderers/module','cs!eight/coffeescript','eight/cameras/Camera','eight/cameras/PerspectiveCamera','eight/renderers/WebGLRenderer','eight/scenes/Scene','eight/objects/Prism','eight/utils/WindowAnimationRunner','eight/utils/WebGLContextMonitor'],function(require) {
   var eight = require('eight/core');
   eight.feature = require('eight/feature');
   eight.module = require('eight/renderers/module');
@@ -811,6 +909,7 @@ define('eight',['require','eight/core','eight/feature','eight/renderers/module',
   eight.Scene = require('eight/scenes/Scene');
   eight.Prism = require('eight/objects/Prism');
   eight.WindowAnimationRunner = require('eight/utils/WindowAnimationRunner');
+  eight.WebGLContextMonitor = require('eight/utils/WebGLContextMonitor');
   return eight;
 });
 

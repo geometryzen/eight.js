@@ -23,6 +23,16 @@ define(function()
         self.escKeyPressed = true;
         event.preventDefault();
       }
+      else if (event.keyCode == 19)
+      {
+        self.pauseKeyPressed = true;
+        event.preventDefault();
+      }
+      else if (event.keyCode == 13)
+      {
+        self.enterKeyPressed = true;
+        event.preventDefault();
+      }
     };
 
     var animate = function(timestamp)
@@ -39,6 +49,7 @@ define(function()
       var terminate = self.terminate;
       if (self.escKeyPressed || terminate(self.elapsed / MILLIS_PER_SECOND))
       {
+        delete self.escKeyPressed;
         self.window.cancelAnimationFrame(self.requestID);
         self.window.document.removeEventListener('keydown', onDocumentKeyDown, false);
         try
@@ -67,6 +78,11 @@ define(function()
     self.setUp();
     self.window.document.addEventListener('keydown', onDocumentKeyDown, false);
     self.requestID = self.window.requestAnimationFrame(animate);
+  }
+
+  WindowAnimationRunner.prototype.stop = function()
+  {
+    this.escKeyPressed = true;
   }
 
   return WindowAnimationRunner;

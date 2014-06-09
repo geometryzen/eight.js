@@ -9,5 +9,6 @@ define(function(require) {
   eight.Scene = require('eight/scenes/Scene');
   eight.Prism = require('eight/objects/Prism');
   eight.WindowAnimationRunner = require('eight/utils/WindowAnimationRunner');
+  eight.WebGLContextMonitor = require('eight/utils/WebGLContextMonitor');
   return eight;
 });
