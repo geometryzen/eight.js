@@ -53,7 +53,7 @@
           monitor.stop();
         };
 
-        var runner = new EIGHT.WindowAnimationRunner(tick, terminate, setUp, tearDown, window);
+        var runner = EIGHT.windowAnimationRunner(tick, terminate, setUp, tearDown, window);
         var camera = new THREE.PerspectiveCamera(45, canvas.width / canvas.height, 0.1, 100.0);
         camera.position.z = 5;
 
@@ -70,7 +70,7 @@
 //        initWebGL();
         };
 
-        var monitor = new EIGHT.WebGLContextMonitor(canvas, onContextLoss, onContextGain);
+        var monitor = EIGHT.webGLContextMonitor(canvas, onContextLoss, onContextGain);
 
         var gl = canvas.getContext('webgl');
         if (typeof WebGLDebugUtils !== 'undefined')

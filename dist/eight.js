@@ -822,63 +822,41 @@ function(object3D, geometryConstructor, vs_source, fs_source)
 
   return constructor;
 });
-define('eight/utils/WindowAnimationRunner',[],function()
+define('eight/utils/windowAnimationRunner',[],function()
 {
-
-  var WindowAnimationRunner = function(tick, terminate, setUp, tearDown, win)
+  var constructor = function(tick, terminate, setUp, tearDown, win)
   {
-    this.tick = tick;
-    this.terminate = terminate;
-    this.setUp = setUp;
-    this.tearDown = tearDown;
-    this.window = win;
-    this.escKeyPressed = false;
-  };
-
-  WindowAnimationRunner.prototype.start = function()
-  {
+    win = win || window;
+    var escKeyPressed = false;
+    var pauseKeyPressed = false;
+    var enterKeyPressed = false;
+    var startTime = null;
+    var elapsed = null;
     var MILLIS_PER_SECOND = 1000;
-    var self = this;
-
-    var onDocumentKeyDown = function(event)
-    {
-      if (event.keyCode == 27)
-      {
-        self.escKeyPressed = true;
-        event.preventDefault();
-      }
-      else if (event.keyCode == 19)
-      {
-        self.pauseKeyPressed = true;
-        event.preventDefault();
-      }
-      else if (event.keyCode == 13)
-      {
-        self.enterKeyPressed = true;
-        event.preventDefault();
-      }
-    };
+    var requestID = null;
+    var exception = null;
 
     var animate = function(timestamp)
     {
-      if (self.startTime)
+      if (startTime)
       {
-        self.elapsed = timestamp - self.startTime;
+        elapsed = timestamp - startTime;
       }
       else
       {
-        self.startTime = timestamp;
-        self.elapsed = 0;
+        startTime = timestamp;
+        elapsed = 0;
       }
-      var terminate = self.terminate;
-      if (self.escKeyPressed || terminate(self.elapsed / MILLIS_PER_SECOND))
+
+      if (escKeyPressed || terminate(elapsed / MILLIS_PER_SECOND))
       {
-        delete self.escKeyPressed;
-        self.window.cancelAnimationFrame(self.requestID);
-        self.window.document.removeEventListener('keydown', onDocumentKeyDown, false);
+        escKeyPressed = false;
+
+        win.cancelAnimationFrame(requestID);
+        win.document.removeEventListener('keydown', onDocumentKeyDown, false);
         try
         {
-          self.tearDown(self.exception);
+          tearDown(exception);
         }
         catch(e)
         {
@@ -887,30 +865,56 @@ define('eight/utils/WindowAnimationRunner',[],function()
       }
       else
       {
-        self.requestID = self.window.requestAnimationFrame(animate);
+        requestID = win.requestAnimationFrame(animate);
         try
         {
-          self.tick(self.elapsed / MILLIS_PER_SECOND);
+          tick(elapsed / MILLIS_PER_SECOND);
         }
         catch(e)
         {
-          self.exception = e;
-          self.escKeyPressed = true;
+          exception = e;
+          escKeyPressed = true;
         }
       }
     };
-    self.setUp();
-    self.window.document.addEventListener('keydown', onDocumentKeyDown, false);
-    self.requestID = self.window.requestAnimationFrame(animate);
-  }
 
-  WindowAnimationRunner.prototype.stop = function()
-  {
-    this.escKeyPressed = true;
-  }
+    var onDocumentKeyDown = function(event)
+    {
+      if (event.keyCode == 27)
+      {
+        escKeyPressed = true;
+        event.preventDefault();
+      }
+      else if (event.keyCode == 19)
+      {
+        pauseKeyPressed = true;
+        event.preventDefault();
+      }
+      else if (event.keyCode == 13)
+      {
+        enterKeyPressed = true;
+        event.preventDefault();
+      }
+    };
 
-  return WindowAnimationRunner;
+    var api =
+    {
+      start: function()
+      {
+        setUp();
+        win.document.addEventListener('keydown', onDocumentKeyDown, false);
+        requestID = win.requestAnimationFrame(animate);
+      },
+      stop: function()
+      {
+        escKeyPressed = true;
+      }
+    };
 
+    return api;
+  };
+
+  return constructor;
 });
 define('eight/utils/webGLContextMonitor',[],function()
 {
@@ -1088,7 +1092,7 @@ define('eight/geometries/prismGeometry',['eight/core/geometry'], function(geomet
 
   return constructor;
 });
-define('eight',['require','eight/core','eight/core/object3D','eight/core/geometry','eight/cameras/camera','eight/cameras/perspectiveCamera','eight/renderers/webGLRenderer','eight/scenes/scene','eight/objects/mesh','eight/utils/WindowAnimationRunner','eight/utils/webGLContextMonitor','eight/math/e3ga/Euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/c3ga/Conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/prismGeometry'],function(require) {
+define('eight',['require','eight/core','eight/core/object3D','eight/core/geometry','eight/cameras/camera','eight/cameras/perspectiveCamera','eight/renderers/webGLRenderer','eight/scenes/scene','eight/objects/mesh','eight/utils/windowAnimationRunner','eight/utils/webGLContextMonitor','eight/math/e3ga/Euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/c3ga/Conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/prismGeometry'],function(require) {
   var eight = require('eight/core');
   eight.object3D = require('eight/core/object3D');
   eight.geometry = require('eight/core/geometry');
@@ -1097,7 +1101,7 @@ define('eight',['require','eight/core','eight/core/object3D','eight/core/geometr
   eight.webGLRenderer = require('eight/renderers/webGLRenderer');
   eight.scene = require('eight/scenes/scene');
   eight.mesh  = require('eight/objects/mesh');
-  eight.WindowAnimationRunner = require('eight/utils/WindowAnimationRunner');
+  eight.windowAnimationRunner = require('eight/utils/windowAnimationRunner');
   eight.webGLContextMonitor = require('eight/utils/webGLContextMonitor');
   eight.Euclidean3 = require('eight/math/e3ga/Euclidean3');
   eight.scalarE3   = require('eight/math/e3ga/scalarE3');
