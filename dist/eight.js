@@ -431,26 +431,6 @@ define('eight/core',[],function() {
 
   return eight;
 });
-define('eight/feature',[],function() {
-  return function() { return 'working'; };
-});
-define('eight/renderers/module',[],function() {
-  return {
-    method: function() { return 'it does'; }
-  };
-});
-define('coffee-script',{});
-define('cs',{load: function(id){throw new Error("Dynamic load not allowed: " + id);}});
-
-(function() {
-  define('cs!eight/coffeescript',[],function() {
-    return function() {
-      return "working";
-    };
-  });
-
-}).call(this);
-
 define('eight/cameras/Camera',[],function() {
 
   var Camera = function() {
@@ -898,11 +878,66 @@ define('eight/utils/WebGLContextMonitor',[],function() {
   return WebGLContextMonitor;
 
 });
-define('eight',['require','eight/core','eight/feature','eight/renderers/module','cs!eight/coffeescript','eight/cameras/Camera','eight/cameras/PerspectiveCamera','eight/renderers/WebGLRenderer','eight/scenes/Scene','eight/objects/Prism','eight/utils/WindowAnimationRunner','eight/utils/WebGLContextMonitor'],function(require) {
+define('eight/math/e3ga/Euclidean3',[],function() {
+
+  var Euclidean3 = function(w, x, y, z, xy, yz, zx, xyz)
+  {
+    this.w   = w;
+    this.x   = x;
+    this.y   = y;
+    this.z   = z;
+    this.xy  = xy;
+    this.yz  = yz;
+    this.zx  = zx;
+    this.xyz = xyz;
+  };
+
+  return Euclidean3;
+
+});
+define('eight/math/e3ga/scalarE3',['eight/math/e3ga/Euclidean3'], function(Euclidean3)
+{
+  return function(w)
+  {
+    return new Euclidean3(w, 0, 0, 0, 0, 0, 0, 0);
+  };
+});
+define('eight/math/e3ga/vectorE3',['eight/math/e3ga/Euclidean3'], function(Euclidean3)
+{
+  return function(x, y, z)
+  {
+    return new Euclidean3(0, x, y, z, 0, 0, 0, 0);
+  };
+});
+define('eight/math/c3ga/Conformal3',[],function() {
+
+  var Conformal3 = function(w, x, y, z)
+  {
+    this.w = w || 0;
+    this.x = x || 0;
+    this.y = y || 0;
+    this.z = z || 0;
+  };
+
+  return Conformal3;
+
+});
+define('eight/math/c3ga/scalarC3',['eight/math/c3ga/Conformal3'], function(Conformal3)
+{
+  return function(w)
+  {
+    return new Conformal3(w);
+  };
+});
+define('eight/math/c3ga/vectorC3',['eight/math/c3ga/Conformal3'], function(Conformal3)
+{
+  return function(x, y, z, o, i)
+  {
+    return new Conformal3(0, x, y, z, o, i);
+  };
+});
+define('eight',['require','eight/core','eight/cameras/Camera','eight/cameras/PerspectiveCamera','eight/renderers/WebGLRenderer','eight/scenes/Scene','eight/objects/Prism','eight/utils/WindowAnimationRunner','eight/utils/WebGLContextMonitor','eight/math/e3ga/Euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/c3ga/Conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3'],function(require) {
   var eight = require('eight/core');
-  eight.feature = require('eight/feature');
-  eight.module = require('eight/renderers/module');
-  eight.coffeescript = require('cs!eight/coffeescript');
   eight.Camera = require('eight/cameras/Camera');
   eight.PerspectiveCamera = require('eight/cameras/PerspectiveCamera');
   eight.WebGLRenderer = require('eight/renderers/WebGLRenderer');
@@ -910,6 +945,12 @@ define('eight',['require','eight/core','eight/feature','eight/renderers/module',
   eight.Prism = require('eight/objects/Prism');
   eight.WindowAnimationRunner = require('eight/utils/WindowAnimationRunner');
   eight.WebGLContextMonitor = require('eight/utils/WebGLContextMonitor');
+  eight.Euclidean3 = require('eight/math/e3ga/Euclidean3');
+  eight.scalarE3   = require('eight/math/e3ga/scalarE3');
+  eight.vectorE3   = require('eight/math/e3ga/vectorE3');
+  eight.Conformal3 = require('eight/math/c3ga/Conformal3');
+  eight.scalarC3   = require('eight/math/c3ga/scalarC3');
+  eight.vectorC3   = require('eight/math/c3ga/vectorC3');
   return eight;
 });
 
