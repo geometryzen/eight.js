@@ -3,7 +3,7 @@
   <head>
     <title>Eight Demo</title>
     <!-- Don't use webgl-debug.js outside of development. -->
-    <!--script src="../manual-deps/khronos/webgl-debug.js"></script-->
+    <script src="../manual-deps/khronos/webgl-debug.js"></script>
     <script src="../vendor/gl-matrix/dist/gl-matrix.js"></script>
     <script src="../dist/eight.js"></script>
     <script src="../vendor/stats.js/build/stats.min.js"></script>
@@ -18,7 +18,7 @@
           // canvas.setRestoreTimeout(3000);
         }
         var scene = EIGHT.scene();
-        var renderer = new EIGHT.WebGLRenderer();
+        var renderer = EIGHT.webGLRenderer();
 
         var stats = new Stats();
         stats.setMode(0);
@@ -48,7 +48,7 @@
           scene.tearDown();
         };
 
-        var animation = new EIGHT.WindowAnimationRunner(tick, terminate, setUp, tearDown, window);
+        var runner = new EIGHT.WindowAnimationRunner(tick, terminate, setUp, tearDown, window);
         var camera = EIGHT.perspectiveCamera(45, canvas.width / canvas.height, 0.1, 100.0);
 
         var mesh = EIGHT.mesh(EIGHT.prismGeometry());
@@ -56,7 +56,7 @@
 
         var onContextLoss = function()
         {
-          animation.stop();
+          runner.stop();
           renderer.onContextLoss();
           scene.onContextLoss();
         };
@@ -65,7 +65,7 @@
         {
           scene.onContextGain(gl);
           renderer.onContextGain(gl);
-          animation.start();
+          runner.start();
         };
 
         var monitor = new EIGHT.WebGLContextMonitor(canvas, onContextLoss, onContextGain);

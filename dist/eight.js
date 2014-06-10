@@ -567,51 +567,48 @@ define('eight/cameras/perspectiveCamera',['eight/cameras/camera'], function(came
 
   return constructor;
 });
-define('eight/renderers/WebGLRenderer',[],function() {
-
-  var WebGLRenderer = function()
+define('eight/renderers/webGLRenderer',[],function()
+{
+  var constructor = function()
   {
-  };
+    var gl;
 
-  WebGLRenderer.prototype.onContextGain = function(gl)
-  {
-    this.gl = gl;
-    gl.clearColor(32/256, 32/256, 32/256, 1.0);
-    gl.enable(gl.DEPTH_TEST);
-  };
-
-  WebGLRenderer.prototype.onContextLoss = function()
-  {
-    delete this.gl;
-  };
-
-  WebGLRenderer.prototype.clearColor = function(r, g, b, a)
-  {
-    var gl = this.gl;
-    gl.clearColor(r, g, b, a);
-  };
-
-  WebGLRenderer.prototype.render = function(scene, camera)
-  {
-    var gl = this.gl;
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    var children = scene.children;
-    for(var i = 0, length = children.length; i < length; i++)
+    var that =
     {
-      children[i].move();
-      children[i].draw(camera.projectionMatrix);
-    }
+      onContextGain: function(context)
+      {
+        gl = context;
+        gl.clearColor(32/256, 32/256, 32/256, 1.0);
+        gl.enable(gl.DEPTH_TEST);
+      },
+      onContextLoss: function()
+      {
+      },
+      clearColor: function(r, g, b, a)
+      {
+        gl.clearColor(r, g, b, a);
+      },
+      render: function(scene, camera)
+      {
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        var children = scene.children;
+        for(var i = 0, length = children.length; i < length; i++)
+        {
+          children[i].move();
+          children[i].draw(camera.projectionMatrix);
+        }
+      },
+      viewport: function(x, y, width, height)
+      {
+        gl.viewport(x, y, width, height);
+      }
+    };
+
+    return that;
   };
 
-  WebGLRenderer.prototype.viewport = function(x, y, width, height)
-  {
-    var gl = this.gl;
-    gl.viewport(x, y, width, height);
-  };
-
-  return WebGLRenderer;
-
+  return constructor;
 });
 define('eight/scenes/scene',['eight/core/object3D'], function(object3D)
 {
@@ -1091,13 +1088,13 @@ define('eight/geometries/prismGeometry',['eight/core/geometry'], function(geomet
 
   return constructor;
 });
-define('eight',['require','eight/core','eight/core/object3D','eight/core/geometry','eight/cameras/camera','eight/cameras/perspectiveCamera','eight/renderers/WebGLRenderer','eight/scenes/scene','eight/objects/mesh','eight/utils/WindowAnimationRunner','eight/utils/WebGLContextMonitor','eight/math/e3ga/Euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/c3ga/Conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/prismGeometry'],function(require) {
+define('eight',['require','eight/core','eight/core/object3D','eight/core/geometry','eight/cameras/camera','eight/cameras/perspectiveCamera','eight/renderers/webGLRenderer','eight/scenes/scene','eight/objects/mesh','eight/utils/WindowAnimationRunner','eight/utils/WebGLContextMonitor','eight/math/e3ga/Euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/c3ga/Conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/prismGeometry'],function(require) {
   var eight = require('eight/core');
   eight.object3D = require('eight/core/object3D');
   eight.geometry = require('eight/core/geometry');
   eight.camera = require('eight/cameras/camera');
   eight.perspectiveCamera = require('eight/cameras/perspectiveCamera');
-  eight.WebGLRenderer = require('eight/renderers/WebGLRenderer');
+  eight.webGLRenderer = require('eight/renderers/webGLRenderer');
   eight.scene = require('eight/scenes/scene');
   eight.mesh  = require('eight/objects/mesh');
   eight.WindowAnimationRunner = require('eight/utils/WindowAnimationRunner');

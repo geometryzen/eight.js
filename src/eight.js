@@ -4,7 +4,7 @@ define(function(require) {
   eight.geometry = require('eight/core/geometry');
   eight.camera = require('eight/cameras/camera');
   eight.perspectiveCamera = require('eight/cameras/perspectiveCamera');
-  eight.WebGLRenderer = require('eight/renderers/WebGLRenderer');
+  eight.webGLRenderer = require('eight/renderers/webGLRenderer');
   eight.scene = require('eight/scenes/scene');
   eight.mesh  = require('eight/objects/mesh');
   eight.WindowAnimationRunner = require('eight/utils/WindowAnimationRunner');
