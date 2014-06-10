@@ -518,6 +518,23 @@ define('eight/core/geometry',['eight/math/c3ga/Conformal3'], function(Conformal3
 
   return constructor;
 });
+define('eight/core/material',[],function()
+{
+  var constructor = function(spec, my)
+  {
+    var api;
+
+    my = my || {};
+
+    api =
+    {
+    };
+
+    return api;
+  };
+
+  return constructor;
+});
 define('eight/cameras/camera',['eight/core/object3D'], function(object3D)
 {
   var constructor = function(spec, my)
@@ -545,24 +562,16 @@ define('eight/cameras/perspectiveCamera',['eight/cameras/camera'], function(came
 {
   var constructor = function(fov, aspect, near, far)
   {
-    var that;
+    var api = camera({});
 
-    // Other private instance variables.
+    api.fov = fov !== undefined ? fov : 50;
+    api.aspect = aspect !== undefined ? aspect : 1;
+    api.near = near !== undefined ? near : 0.1;
+    api.far = far !== undefined ? far : 2000;
 
-    // Add shared variables and functions to my.
+    mat4.perspective(api.projectionMatrix, api.fov, api.aspect, api.near, api.far);
 
-    that = camera({});
-
-    that.fov = fov !== undefined ? fov : 50;
-    that.aspect = aspect !== undefined ? aspect : 1;
-    that.near = near !== undefined ? near : 0.1;
-    that.far = far !== undefined ? far : 2000;
-
-    mat4.perspective(that.projectionMatrix, that.fov, that.aspect, that.near, that.far);
-
-    // Add privileged methods to that.
-
-    return that;
+    return api;
   };
 
   return constructor;
@@ -659,6 +668,19 @@ define('eight/scenes/scene',['eight/core/object3D'], function(object3D)
 
   return constructor;
 });
+define('eight/materials/meshBasicMaterial',['eight/core/material'], function(material)
+{
+  var constructor = function(spec, my)
+  {
+    var api = material(spec, my);
+
+    my = my || {};
+
+    return api;
+  };
+
+  return constructor;
+});
 define('eight/shaders/shader-vs',[],function() {
   var source = [
     "attribute vec3 aVertexPosition;",
@@ -690,10 +712,11 @@ define(
 'eight/objects/mesh',[
 'eight/core/object3D',
 'eight/core/geometry',
+'eight/materials/meshBasicMaterial',
 'eight/shaders/shader-vs',
 'eight/shaders/shader-fs'
 ],
-function(object3D, geometryConstructor, vs_source, fs_source)
+function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
 {
   var constructor = function(geometry, material)
   {
@@ -711,6 +734,7 @@ function(object3D, geometryConstructor, vs_source, fs_source)
     var mvMatrix = mat4.create();
     var angle = 0;
     geometry = geometry || geometryConstructor();
+    material = material || meshBasicMaterial({'color': Math.random() * 0xffffff});
 
     // Add shared variables and functions to my.
 
@@ -1092,10 +1116,24 @@ define('eight/geometries/prismGeometry',['eight/core/geometry'], function(geomet
 
   return constructor;
 });
-define('eight',['require','eight/core','eight/core/object3D','eight/core/geometry','eight/cameras/camera','eight/cameras/perspectiveCamera','eight/renderers/webGLRenderer','eight/scenes/scene','eight/objects/mesh','eight/utils/windowAnimationRunner','eight/utils/webGLContextMonitor','eight/math/e3ga/Euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/c3ga/Conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/prismGeometry'],function(require) {
+define('eight/materials/meshNormalMaterial',['eight/core/material'], function(material)
+{
+  var constructor = function(spec, my)
+  {
+    var api = material(spec, my);
+
+    my = my || {};
+
+    return api;
+  };
+
+  return constructor;
+});
+define('eight',['require','eight/core','eight/core/object3D','eight/core/geometry','eight/core/material','eight/cameras/camera','eight/cameras/perspectiveCamera','eight/renderers/webGLRenderer','eight/scenes/scene','eight/objects/mesh','eight/utils/windowAnimationRunner','eight/utils/webGLContextMonitor','eight/math/e3ga/Euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/c3ga/Conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/prismGeometry','eight/materials/meshBasicMaterial','eight/materials/meshNormalMaterial'],function(require) {
   var eight = require('eight/core');
   eight.object3D = require('eight/core/object3D');
   eight.geometry = require('eight/core/geometry');
+  eight.material = require('eight/core/material');
   eight.camera = require('eight/cameras/camera');
   eight.perspectiveCamera = require('eight/cameras/perspectiveCamera');
   eight.webGLRenderer = require('eight/renderers/webGLRenderer');
@@ -1110,6 +1148,8 @@ define('eight',['require','eight/core','eight/core/object3D','eight/core/geometr
   eight.scalarC3   = require('eight/math/c3ga/scalarC3');
   eight.vectorC3   = require('eight/math/c3ga/vectorC3');
   eight.prismGeometry = require('eight/geometries/prismGeometry');
+  eight.meshBasicMaterial = require('eight/materials/meshBasicMaterial');
+  eight.meshNormalMaterial = require('eight/materials/meshNormalMaterial');
   return eight;
 });
 

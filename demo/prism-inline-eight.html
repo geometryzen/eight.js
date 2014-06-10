@@ -51,7 +51,7 @@
         var runner = EIGHT.windowAnimationRunner(tick, terminate, setUp, tearDown);
         var camera = EIGHT.perspectiveCamera(45, canvas.width / canvas.height, 0.1, 100.0);
 
-        var mesh = EIGHT.mesh(EIGHT.prismGeometry());
+        var mesh = EIGHT.mesh(EIGHT.prismGeometry(), EIGHT.meshNormalMaterial({'wireframe':true}));
         scene.add(mesh);
 
         var onContextLoss = function()

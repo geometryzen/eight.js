@@ -2,24 +2,16 @@ define(['eight/cameras/camera'], function(camera)
 {
   var constructor = function(fov, aspect, near, far)
   {
-    var that;
+    var api = camera({});
 
-    // Other private instance variables.
+    api.fov = fov !== undefined ? fov : 50;
+    api.aspect = aspect !== undefined ? aspect : 1;
+    api.near = near !== undefined ? near : 0.1;
+    api.far = far !== undefined ? far : 2000;
 
-    // Add shared variables and functions to my.
+    mat4.perspective(api.projectionMatrix, api.fov, api.aspect, api.near, api.far);
 
-    that = camera({});
-
-    that.fov = fov !== undefined ? fov : 50;
-    that.aspect = aspect !== undefined ? aspect : 1;
-    that.near = near !== undefined ? near : 0.1;
-    that.far = far !== undefined ? far : 2000;
-
-    mat4.perspective(that.projectionMatrix, that.fov, that.aspect, that.near, that.far);
-
-    // Add privileged methods to that.
-
-    return that;
+    return api;
   };
 
   return constructor;

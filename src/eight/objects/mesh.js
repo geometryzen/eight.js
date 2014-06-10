@@ -2,10 +2,11 @@ define(
 [
 'eight/core/object3D',
 'eight/core/geometry',
+'eight/materials/meshBasicMaterial',
 'eight/shaders/shader-vs',
 'eight/shaders/shader-fs'
 ],
-function(object3D, geometryConstructor, vs_source, fs_source)
+function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
 {
   var constructor = function(geometry, material)
   {
@@ -23,6 +24,7 @@ function(object3D, geometryConstructor, vs_source, fs_source)
     var mvMatrix = mat4.create();
     var angle = 0;
     geometry = geometry || geometryConstructor();
+    material = material || meshBasicMaterial({'color': Math.random() * 0xffffff});
 
     // Add shared variables and functions to my.
 
