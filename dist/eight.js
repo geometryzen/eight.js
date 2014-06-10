@@ -612,46 +612,54 @@ define('eight/renderers/WebGLRenderer',[],function() {
   return WebGLRenderer;
 
 });
-define('eight/scenes/Scene',['eight/core/object3D'], function(object3D)
+define('eight/scenes/scene',['eight/core/object3D'], function(object3D)
 {
-  var Scene = function()
+  var constructor = function(spec, my)
   {
-    this.children = [];
-  };
+    var that;
 
-  Scene.prototype.add = function(mesh)
-  {
-    this.children.push(mesh);
-  };
+    // Other private instance variables.
+    var children = [];
 
-  Scene.prototype.onContextGain = function(gl)
-  {
-    var children = this.children;
-    for(var i = 0, length = children.length; i < length; i++)
+    my = my || {};
+
+    // Add shared variables and functions to my.
+
+    that = object3D(spec, my);
+
+    that.children = children;
+    that.onContextGain = function(gl)
     {
-      children[i].onContextGain(gl);
-    }
-  };
-
-  Scene.prototype.onContextLoss = function()
-  {
-    var children = this.children;
-    for(var i = 0, length = children.length; i < length; i++)
+      for(var i = 0, length = children.length; i < length; i++)
+      {
+        children[i].onContextGain(gl);
+      }
+    };
+    that.onContextLoss = function()
     {
-      children[i].onContextLoss();
-    }
-  };
-
-  Scene.prototype.tearDown = function()
-  {
-    var children = this.children;
-    for(var i = 0, length = children.length; i < length; i++)
+      for(var i = 0, length = children.length; i < length; i++)
+      {
+        children[i].onContextLoss();
+      }
+    };
+    that.tearDown = function()
     {
-      children[i].tearDown();
-    }
+      for(var i = 0, length = children.length; i < length; i++)
+      {
+        children[i].tearDown();
+      }
+    };
+    that.add = function(child)
+    {
+      children.push(child);
+    };
+
+    // Add privileged methods to that.
+
+    return that;
   };
 
-  return Scene;
+  return constructor;
 });
 define('eight/shaders/shader-vs',[],function() {
   var source = [
@@ -1072,14 +1080,14 @@ define('eight/geometries/prismGeometry',['eight/core/geometry'], function(geomet
 
   return constructor;
 });
-define('eight',['require','eight/core','eight/core/object3D','eight/core/geometry','eight/cameras/camera','eight/cameras/perspectiveCamera','eight/renderers/WebGLRenderer','eight/scenes/Scene','eight/objects/Mesh','eight/utils/WindowAnimationRunner','eight/utils/WebGLContextMonitor','eight/math/e3ga/Euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/c3ga/Conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/prismGeometry'],function(require) {
+define('eight',['require','eight/core','eight/core/object3D','eight/core/geometry','eight/cameras/camera','eight/cameras/perspectiveCamera','eight/renderers/WebGLRenderer','eight/scenes/scene','eight/objects/Mesh','eight/utils/WindowAnimationRunner','eight/utils/WebGLContextMonitor','eight/math/e3ga/Euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/c3ga/Conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/prismGeometry'],function(require) {
   var eight = require('eight/core');
   eight.object3D = require('eight/core/object3D');
   eight.geometry = require('eight/core/geometry');
   eight.camera = require('eight/cameras/camera');
   eight.perspectiveCamera = require('eight/cameras/perspectiveCamera');
   eight.WebGLRenderer = require('eight/renderers/WebGLRenderer');
-  eight.Scene = require('eight/scenes/Scene');
+  eight.scene = require('eight/scenes/scene');
   eight.Mesh  = require('eight/objects/Mesh');
   eight.WindowAnimationRunner = require('eight/utils/WindowAnimationRunner');
   eight.WebGLContextMonitor = require('eight/utils/WebGLContextMonitor');
