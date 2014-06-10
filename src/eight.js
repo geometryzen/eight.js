@@ -1,9 +1,9 @@
 define(function(require) {
   var eight = require('eight/core');
-  eight.Object3D = require('eight/core/Object3D');
-  eight.Geometry = require('eight/core/Geometry');
-  eight.Camera = require('eight/cameras/Camera');
-  eight.PerspectiveCamera = require('eight/cameras/PerspectiveCamera');
+  eight.object3D = require('eight/core/object3D');
+  eight.geometry = require('eight/core/geometry');
+  eight.camera = require('eight/cameras/camera');
+  eight.perspectiveCamera = require('eight/cameras/perspectiveCamera');
   eight.WebGLRenderer = require('eight/renderers/WebGLRenderer');
   eight.Scene = require('eight/scenes/Scene');
   eight.Mesh  = require('eight/objects/Mesh');
@@ -15,6 +15,6 @@ define(function(require) {
   eight.Conformal3 = require('eight/math/c3ga/Conformal3');
   eight.scalarC3   = require('eight/math/c3ga/scalarC3');
   eight.vectorC3   = require('eight/math/c3ga/vectorC3');
-  eight.PrismGeometry = require('eight/geometries/PrismGeometry');
+  eight.prismGeometry = require('eight/geometries/prismGeometry');
   return eight;
 });

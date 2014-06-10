@@ -1,22 +1,19 @@
 define(
 [
-'eight/core/Object3D',
-'eight/core/Geometry',
+'eight/core/object3D',
+'eight/core/geometry',
 'eight/shaders/shader-vs',
 'eight/shaders/shader-fs'
 ],
-function(Object3D, Geometry, vs_source, fs_source)
+function(object3D, geometryConstructor, vs_source, fs_source)
 {
   var angle = 0;
 
   var Mesh = function(geometry, material)
   {
-    Object3D.call(this);
     this.mvMatrix = mat4.create();
-    this.geometry = geometry !== undefined ? geometry : new Geometry();
+    this.geometry = geometry !== undefined ? geometry : geometryConstructor();
   };
-
-  Mesh.prototype = new Object3D();
 
   Mesh.prototype.onContextGain = function(gl)
   {

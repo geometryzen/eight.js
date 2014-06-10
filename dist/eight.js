@@ -444,90 +444,128 @@ define('eight/math/c3ga/Conformal3',[],function() {
   return Conformal3;
 
 });
-define('eight/core/Object3D',['eight/math/c3ga/Conformal3'], function(Conformal3)
+define('eight/core/object3D',['eight/math/c3ga/Conformal3'], function(Conformal3)
 {
-  var Object3D = function()
+  var constructor = function(spec, my)
   {
-    this.transform = new Conformal3();
+    var that;
+
+    // Other private instance variables.
+
+    my = my || {};
+
+    // Add shared variables and functions to my.
+
+    that =
+    {
+      transform: new Conformal3(),
+      onContextGain: function(gl)
+      {
+        console.error("Missing onContextGain function");
+      },
+      onContextLoss: function()
+      {
+        console.error("Missing onContextLoss function");
+      },
+      tearDown: function()
+      {
+        console.error("Missing tearDown function");
+      },
+      move: function()
+      {
+        console.error("Missing tearDown function");
+      },
+      draw: function()
+      {
+        console.error("Missing tearDown function");
+      }
+    };
+
+    // Add privileged methods to that.
+
+    return that;
   };
 
-  Object3D.prototype.onContextGain = function(gl)
-  {
-    console.error("Missing onContextGain function");
-  }
-
-  Object3D.prototype.onContextLoss = function()
-  {
-    console.error("Missing onContextLoss function");
-  }
-
-  Object3D.prototype.tearDown = function()
-  {
-    console.error("Missing tearDown function");
-  }
-
-  Object3D.prototype.move = function()
-  {
-    console.error("Missing move function");
-  }
-
-  Object3D.prototype.draw = function()
-  {
-    console.error("Missing draw function");
-  }
-
-  return Object3D;
+  return constructor;
 });
-define('eight/core/Geometry',['eight/math/c3ga/Conformal3'], function(Conformal3)
+define('eight/core/geometry',['eight/math/c3ga/Conformal3'], function(Conformal3)
 {
-  var Geometry = function()
+  var constructor = function(spec, my)
   {
-    this.vertices = [];
-    this.colors = [];
-    this.vertexIndices = [];
+    var that;
+
+    // Other private instance variables.
+
+    my = my || {};
+
+    // Add shared variables and functions to my.
+
+    that =
+    {
+      vertices: [],
+      vertexIndices: [],
+      colors: [],
+      primitives: function(gl)
+      {
+        return gl.TRIANGLES;
+      }
+    };
+
+    // Add privileged methods to that.
+
+    return that;
   };
 
-  Geometry.prototype.primitives = function(gl)
-  {
-    return gl.TRIANGLES;
-  };
-
-  return Geometry;
+  return constructor;
 });
-define('eight/cameras/Camera',['eight/core/Object3D'], function(Object3D) {
-
-  var Camera = function()
+define('eight/cameras/camera',['eight/core/object3D'], function(object3D)
+{
+  var constructor = function(spec, my)
   {
-    Object3D.call(this);
-    this.projectionMatrix = mat4.create();
+    var that;
+
+    // Other private instance variables.
+
+    my = my || {};
+
+    // Add shared variables and functions to my.
+
+    that = object3D(spec, my);
+
+    that.projectionMatrix = mat4.create();
+
+    // Add privileged methods to that.
+
+    return that;
   };
 
-  Camera.prototype = Object.create(Object3D.prototype);
-
-  return Camera;
-
+  return constructor;
 });
-define('eight/cameras/PerspectiveCamera',['eight/cameras/Camera'], function(Camera) {
+define('eight/cameras/perspectiveCamera',['eight/cameras/camera'], function(camera)
+{
+  var constructor = function(fov, aspect, near, far)
+  {
+    var that;
 
-  var PerspectiveCamera = function(fov, aspect, near, far) {
+    // Other private instance variables.
 
-    Camera.call(this);
+    // Add shared variables and functions to my.
 
-    this.fov = fov !== undefined ? fov : 50;
-    this.aspect = aspect !== undefined ? aspect : 1;
-    this.near = near !== undefined ? near : 0.1;
-    this.far = far !== undefined ? far : 2000;
+    that = camera({});
 
-    mat4.perspective(this.projectionMatrix, this.fov, this.aspect, this.near, this.far);
+    that.fov = fov !== undefined ? fov : 50;
+    that.aspect = aspect !== undefined ? aspect : 1;
+    that.near = near !== undefined ? near : 0.1;
+    that.far = far !== undefined ? far : 2000;
 
-//  this.updateProjectionMatrix();
+    mat4.perspective(that.projectionMatrix, that.fov, that.aspect, that.near, that.far);
 
+    // Add privileged methods to that.
+
+    return that;
   };
 
-  PerspectiveCamera.prototype = Object.create(Camera.prototype);
-
-  return PerspectiveCamera;
-
+  return constructor;
 });
 define('eight/renderers/WebGLRenderer',[],function() {
 
@@ -574,15 +612,12 @@ define('eight/renderers/WebGLRenderer',[],function() {
   return WebGLRenderer;
 
 });
-define('eight/scenes/Scene',['eight/core/Object3D'], function(Object3D)
+define('eight/scenes/Scene',['eight/core/object3D'], function(object3D)
 {
   var Scene = function()
   {
-    Object3D.call(this);
     this.children = [];
   };
-
-  Scene.prototype = new Object3D();
 
   Scene.prototype.add = function(mesh)
   {
@@ -647,23 +682,20 @@ define('eight/shaders/shader-fs',[],function() {
 });
 define(
 'eight/objects/Mesh',[
-'eight/core/Object3D',
-'eight/core/Geometry',
+'eight/core/object3D',
+'eight/core/geometry',
 'eight/shaders/shader-vs',
 'eight/shaders/shader-fs'
 ],
-function(Object3D, Geometry, vs_source, fs_source)
+function(object3D, geometryConstructor, vs_source, fs_source)
 {
   var angle = 0;
 
   var Mesh = function(geometry, material)
   {
-    Object3D.call(this);
     this.mvMatrix = mat4.create();
-    this.geometry = geometry !== undefined ? geometry : new Geometry();
+    this.geometry = geometry !== undefined ? geometry : geometryConstructor();
   };
-
-  Mesh.prototype = new Object3D();
 
   Mesh.prototype.onContextGain = function(gl)
   {
@@ -945,7 +977,7 @@ define('eight/math/c3ga/vectorC3',['eight/math/c3ga/Conformal3'], function(Confo
     return new Conformal3(0, x, y, z, o, i);
   };
 });
-define('eight/geometries/PrismGeometry',['eight/core/Geometry'], function(Geometry)
+define('eight/geometries/prismGeometry',['eight/core/geometry'], function(geometry)
 {
   //12 vertices
   var vertices =
@@ -1017,25 +1049,35 @@ define('eight/geometries/PrismGeometry',['eight/core/Geometry'], function(Geomet
      1.0, 1.0, 1.0
   ];
 
-  var PrismGeometry = function()
+  var constructor = function(spec, my)
   {
-    Geometry.call(this);
+    var that;
 
-    this.vertices = vertices;
-    this.vertexIndices = vertexIndices;
-    this.colors = colors;
+    // Other private instance variables.
+
+    my = my || {};
+
+    // Add shared variables and functions to my.
+
+    that = geometry(spec, my);
+
+    that.vertices = vertices;
+    that.vertexIndices = vertexIndices;
+    that.colors = colors;
+
+    // Add privileged methods to that.
+
+    return that;
   };
 
-  PrismGeometry.prototype = new Geometry();
-
-  return PrismGeometry;
+  return constructor;
 });
-define('eight',['require','eight/core','eight/core/Object3D','eight/core/Geometry','eight/cameras/Camera','eight/cameras/PerspectiveCamera','eight/renderers/WebGLRenderer','eight/scenes/Scene','eight/objects/Mesh','eight/utils/WindowAnimationRunner','eight/utils/WebGLContextMonitor','eight/math/e3ga/Euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/c3ga/Conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/PrismGeometry'],function(require) {
+define('eight',['require','eight/core','eight/core/object3D','eight/core/geometry','eight/cameras/camera','eight/cameras/perspectiveCamera','eight/renderers/WebGLRenderer','eight/scenes/Scene','eight/objects/Mesh','eight/utils/WindowAnimationRunner','eight/utils/WebGLContextMonitor','eight/math/e3ga/Euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/c3ga/Conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/prismGeometry'],function(require) {
   var eight = require('eight/core');
-  eight.Object3D = require('eight/core/Object3D');
-  eight.Geometry = require('eight/core/Geometry');
-  eight.Camera = require('eight/cameras/Camera');
-  eight.PerspectiveCamera = require('eight/cameras/PerspectiveCamera');
+  eight.object3D = require('eight/core/object3D');
+  eight.geometry = require('eight/core/geometry');
+  eight.camera = require('eight/cameras/camera');
+  eight.perspectiveCamera = require('eight/cameras/perspectiveCamera');
   eight.WebGLRenderer = require('eight/renderers/WebGLRenderer');
   eight.Scene = require('eight/scenes/Scene');
   eight.Mesh  = require('eight/objects/Mesh');
@@ -1047,7 +1089,7 @@ define('eight',['require','eight/core','eight/core/Object3D','eight/core/Geometr
   eight.Conformal3 = require('eight/math/c3ga/Conformal3');
   eight.scalarC3   = require('eight/math/c3ga/scalarC3');
   eight.vectorC3   = require('eight/math/c3ga/vectorC3');
-  eight.PrismGeometry = require('eight/geometries/PrismGeometry');
+  eight.prismGeometry = require('eight/geometries/prismGeometry');
   return eight;
 });
 

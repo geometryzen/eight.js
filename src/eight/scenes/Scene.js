@@ -1,12 +1,9 @@
-define(['eight/core/Object3D'], function(Object3D)
+define(['eight/core/object3D'], function(object3D)
 {
   var Scene = function()
   {
-    Object3D.call(this);
     this.children = [];
   };
-
-  Scene.prototype = new Object3D();
 
   Scene.prototype.add = function(mesh)
   {

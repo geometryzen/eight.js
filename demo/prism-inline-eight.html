@@ -49,9 +49,9 @@
         };
 
         var animation = new EIGHT.WindowAnimationRunner(tick, terminate, setUp, tearDown, window);
-        var camera = new EIGHT.PerspectiveCamera(45, canvas.width / canvas.height, 0.1, 100.0);
+        var camera = EIGHT.perspectiveCamera(45, canvas.width / canvas.height, 0.1, 100.0);
 
-        var mesh = new EIGHT.Mesh(new EIGHT.PrismGeometry());
+        var mesh = new EIGHT.Mesh(EIGHT.prismGeometry());
         scene.add(mesh);
 
         var onContextLoss = function()

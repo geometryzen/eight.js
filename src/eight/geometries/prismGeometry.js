@@ -1,4 +1,4 @@
-define(['eight/core/Geometry'], function(Geometry)
+define(['eight/core/geometry'], function(geometry)
 {
   //12 vertices
   var vertices =
@@ -70,16 +70,26 @@ define(['eight/core/Geometry'], function(Geometry)
      1.0, 1.0, 1.0
   ];
 
-  var PrismGeometry = function()
+  var constructor = function(spec, my)
   {
-    Geometry.call(this);
+    var that;
 
-    this.vertices = vertices;
-    this.vertexIndices = vertexIndices;
-    this.colors = colors;
+    // Other private instance variables.
+
+    my = my || {};
+
+    // Add shared variables and functions to my.
+
+    that = geometry(spec, my);
+
+    that.vertices = vertices;
+    that.vertexIndices = vertexIndices;
+    that.colors = colors;
+
+    // Add privileged methods to that.
+
+    return that;
   };
 
-  PrismGeometry.prototype = new Geometry();
-
-  return PrismGeometry;
+  return constructor;
 });
