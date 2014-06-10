@@ -431,13 +431,78 @@ define('eight/core',[],function() {
 
   return eight;
 });
-define('eight/cameras/Camera',[],function() {
+define('eight/math/c3ga/Conformal3',[],function() {
 
-  var Camera = function() {
-
-    this.projectionMatrix = mat4.create();
-
+  var Conformal3 = function(w, x, y, z)
+  {
+    this.w = w || 0;
+    this.x = x || 0;
+    this.y = y || 0;
+    this.z = z || 0;
   };
+
+  return Conformal3;
+
+});
+define('eight/core/Object3D',['eight/math/c3ga/Conformal3'], function(Conformal3)
+{
+  var Object3D = function()
+  {
+    this.transform = new Conformal3();
+  };
+
+  Object3D.prototype.onContextGain = function(gl)
+  {
+    console.error("Missing onContextGain function");
+  }
+
+  Object3D.prototype.onContextLoss = function()
+  {
+    console.error("Missing onContextLoss function");
+  }
+
+  Object3D.prototype.tearDown = function()
+  {
+    console.error("Missing tearDown function");
+  }
+
+  Object3D.prototype.move = function()
+  {
+    console.error("Missing move function");
+  }
+
+  Object3D.prototype.draw = function()
+  {
+    console.error("Missing draw function");
+  }
+
+  return Object3D;
+});
+define('eight/core/Geometry',['eight/math/c3ga/Conformal3'], function(Conformal3)
+{
+  var Geometry = function()
+  {
+    this.vertices = [];
+    this.colors = [];
+    this.vertexIndices = [];
+  };
+
+  Geometry.prototype.primitives = function(gl)
+  {
+    return gl.TRIANGLES;
+  };
+
+  return Geometry;
+});
+define('eight/cameras/Camera',['eight/core/Object3D'], function(Object3D) {
+
+  var Camera = function()
+  {
+    Object3D.call(this);
+    this.projectionMatrix = mat4.create();
+  };
+
+  Camera.prototype = Object.create(Object3D.prototype);
 
   return Camera;
 
@@ -509,39 +574,49 @@ define('eight/renderers/WebGLRenderer',[],function() {
   return WebGLRenderer;
 
 });
-define('eight/scenes/Scene',[],function() {
-
-  var Scene = function() {
+define('eight/scenes/Scene',['eight/core/Object3D'], function(Object3D)
+{
+  var Scene = function()
+  {
+    Object3D.call(this);
     this.children = [];
   };
 
-  Scene.prototype.add = function(mesh) {
-    this.children.push(mesh);
-  }
+  Scene.prototype = new Object3D();
 
-  Scene.prototype.onContextGain = function(gl) {
+  Scene.prototype.add = function(mesh)
+  {
+    this.children.push(mesh);
+  };
+
+  Scene.prototype.onContextGain = function(gl)
+  {
     var children = this.children;
-    for(var i = 0, length = children.length; i < length; i++) {
+    for(var i = 0, length = children.length; i < length; i++)
+    {
       children[i].onContextGain(gl);
     }
-  }
+  };
 
-  Scene.prototype.onContextLoss = function() {
+  Scene.prototype.onContextLoss = function()
+  {
     var children = this.children;
-    for(var i = 0, length = children.length; i < length; i++) {
+    for(var i = 0, length = children.length; i < length; i++)
+    {
       children[i].onContextLoss();
     }
-  }
+  };
 
-  Scene.prototype.tearDown = function() {
+  Scene.prototype.tearDown = function()
+  {
     var children = this.children;
-    for(var i = 0, length = children.length; i < length; i++) {
+    for(var i = 0, length = children.length; i < length; i++)
+    {
       children[i].tearDown();
     }
-  }
+  };
 
   return Scene;
-
 });
 define('eight/shaders/shader-vs',[],function() {
   var source = [
@@ -570,104 +645,48 @@ define('eight/shaders/shader-fs',[],function() {
   ].join('\n');
   return source;
 });
-define('eight/objects/Prism',['eight/shaders/shader-vs', 'eight/shaders/shader-fs'], function(vs_source, fs_source) {
+define(
+'eight/objects/Mesh',[
+'eight/core/Object3D',
+'eight/core/Geometry',
+'eight/shaders/shader-vs',
+'eight/shaders/shader-fs'
+],
+function(Object3D, Geometry, vs_source, fs_source)
+{
+  var angle = 0;
 
-  var triangleVerticeColors = [ 
-    //front face  
-     0.0, 0.0, 1.0,
-     1.0, 1.0, 1.0,
-     0.0, 0.0, 1.0,
-     0.0, 0.0, 1.0,
-     0.0, 0.0, 1.0,
-     1.0, 1.0, 1.0,
-  
-    //rear face
-     0.0, 1.0, 1.0,
-     1.0, 1.0, 1.0,
-     0.0, 1.0, 1.0,
-     0.0, 1.0, 1.0,
-     0.0, 1.0, 1.0,
-     1.0, 1.0, 1.0
-  ];
-
-  //12 vertices
-  var triangleVertices =
-  [
-    //front face
-    //bottom left to right,  to top
-    0.0, 0.0, 0.0,
-    1.0, 0.0, 0.0,
-    2.0, 0.0, 0.0,
-    0.5, 1.0, 0.0,
-    1.5, 1.0, 0.0,
-    1.0, 2.0, 0.0,
-
-    //rear face
-    0.0, 0.0, -2.0,
-    1.0, 0.0, -2.0,
-    2.0, 0.0, -2.0,
-    0.5, 1.0, -2.0,
-    1.5, 1.0, -2.0,
-    1.0, 2.0, -2.0,
-  ];
-
-  var triangleVertexIndices =
-  [
-    //front face
-    0,1,3,
-    1,3,4,
-    1,2,4,
-    3,4,5,
-    
-    //rear face
-    6,7,9,
-    7,9,10,
-    7,8,10,
-    9,10,11,
-    
-    //left side
-    0,3,6,
-    3,6,9,
-    3,5,9,
-    5,9,11,
-    
-    //right side
-    2,4,8,
-    4,8,10,
-    4,5,10,
-    5,10,11,
-    //bottom faces
-    0,6,8,
-    8,2,0
-  ];
-
-  var angle = 0.01;
-
-  function makeShader(gl, src, type)
+  var Mesh = function(geometry, material)
   {
-    var shader = gl.createShader(type);
-    gl.shaderSource(shader, src);
-    gl.compileShader(shader);
-
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS) && !gl.isContextLost())
-    {
-      var infoLog = gl.getShaderInfoLog(shader);
-      alert("Error compiling shader:\n" + infoLog);
-    }
-    return shader;
-  }
-
-  var Prism = function()
-  {
+    Object3D.call(this);
     this.mvMatrix = mat4.create();
-  }
+    this.geometry = geometry !== undefined ? geometry : new Geometry();
+  };
 
-  Prism.prototype.onContextGain = function(gl)
+  Mesh.prototype = new Object3D();
+
+  Mesh.prototype.onContextGain = function(gl)
   {
     this.gl = gl;
-    this.vs = makeShader(gl, vs_source, gl.VERTEX_SHADER);
-    this.fs = makeShader(gl, fs_source, gl.FRAGMENT_SHADER);
-    
+
+    this.vs = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(this.vs, vs_source);
+    gl.compileShader(this.vs);
+    if (!gl.getShaderParameter(this.vs, gl.COMPILE_STATUS) && !gl.isContextLost())
+    {
+      var infoLog = gl.getShaderInfoLog(this.vs);
+      alert("Error compiling vertex shader:\n" + infoLog);
+    }
+
+    this.fs = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(this.fs, fs_source);
+    gl.compileShader(this.fs);
+    if (!gl.getShaderParameter(this.fs, gl.COMPILE_STATUS) && !gl.isContextLost())
+    {
+      var infoLog = gl.getShaderInfoLog(this.fs);
+      alert("Error compiling fragment shader:\n" + infoLog);
+    }
+
     this.program = gl.createProgram();
     
     gl.attachShader(this.program, this.vs);
@@ -680,23 +699,24 @@ define('eight/objects/Prism',['eight/shaders/shader-vs', 'eight/shaders/shader-f
       alert("Error linking program:\n" + infoLog);
     }
 
+    var geometry = this.geometry;
     this.vbc = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbc);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVerticeColors), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geometry.colors), gl.STATIC_DRAW);
 
     this.vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVertices), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geometry.vertices), gl.STATIC_DRAW);
 
     this.vbi = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.vbi);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(triangleVertexIndices), gl.STATIC_DRAW);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(geometry.vertexIndices), gl.STATIC_DRAW);
 
     this.mvMatrixUniform = gl.getUniformLocation(this.program, "uMVMatrix");
     this.pMatrixUniform  = gl.getUniformLocation(this.program, "uPMatrix");
   }
 
-  Prism.prototype.onContextLoss = function()
+  Mesh.prototype.onContextLoss = function()
   {
     delete this.vs;
     delete this.fs;
@@ -708,7 +728,8 @@ define('eight/objects/Prism',['eight/shaders/shader-vs', 'eight/shaders/shader-f
     delete this.pMatrixUniform;
   }
 
-  Prism.prototype.tearDown = function() {
+  Mesh.prototype.tearDown = function()
+  {
     var gl = this.gl;
     gl.deleteShader(this.vs);
     delete this.vs;
@@ -718,16 +739,18 @@ define('eight/objects/Prism',['eight/shaders/shader-vs', 'eight/shaders/shader-f
     delete this.program;
   };
 
-  Prism.prototype.move = function() {
-
+  Mesh.prototype.move = function()
+  {
     mat4.identity(this.mvMatrix);
     mat4.translate(this.mvMatrix, this.mvMatrix, [-1.0, -1.0, -7.0]);
     mat4.rotate(this.mvMatrix, this.mvMatrix, angle, [0.0, 1.0, 0.0]);
     angle += 0.01;
-
   };
 
-  Prism.prototype.draw = function(gl, projectionMatrix) {
+  Mesh.prototype.draw = function(gl, projectionMatrix)
+  {
+//    var program = this.program;
+//    var geometry = this.geometry;
 
     gl.useProgram(this.program);
 
@@ -745,12 +768,11 @@ define('eight/objects/Prism',['eight/shaders/shader-vs', 'eight/shaders/shader-f
     gl.vertexAttribPointer(vertexColorAttribute, 3, gl.FLOAT, false, 0, 0);
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.vbi);
-    gl.drawElements(gl.TRIANGLES, triangleVertexIndices.length, gl.UNSIGNED_SHORT, 0);
-
+    var mode = this.geometry.primitives(gl);
+    gl.drawElements(mode, this.geometry.vertexIndices.length, gl.UNSIGNED_SHORT, 0);
   };
 
-  return Prism;
-
+  return Mesh;
 });
 define('eight/utils/WindowAnimationRunner',[],function()
 {
@@ -909,19 +931,6 @@ define('eight/math/e3ga/vectorE3',['eight/math/e3ga/Euclidean3'], function(Eucli
     return new Euclidean3(0, x, y, z, 0, 0, 0, 0);
   };
 });
-define('eight/math/c3ga/Conformal3',[],function() {
-
-  var Conformal3 = function(w, x, y, z)
-  {
-    this.w = w || 0;
-    this.x = x || 0;
-    this.y = y || 0;
-    this.z = z || 0;
-  };
-
-  return Conformal3;
-
-});
 define('eight/math/c3ga/scalarC3',['eight/math/c3ga/Conformal3'], function(Conformal3)
 {
   return function(w)
@@ -936,13 +945,100 @@ define('eight/math/c3ga/vectorC3',['eight/math/c3ga/Conformal3'], function(Confo
     return new Conformal3(0, x, y, z, o, i);
   };
 });
-define('eight',['require','eight/core','eight/cameras/Camera','eight/cameras/PerspectiveCamera','eight/renderers/WebGLRenderer','eight/scenes/Scene','eight/objects/Prism','eight/utils/WindowAnimationRunner','eight/utils/WebGLContextMonitor','eight/math/e3ga/Euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/c3ga/Conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3'],function(require) {
+define('eight/geometries/PrismGeometry',['eight/core/Geometry'], function(Geometry)
+{
+  //12 vertices
+  var vertices =
+  [
+    //front face
+    //bottom left to right,  to top
+    0.0, 0.0, 0.0,
+    1.0, 0.0, 0.0,
+    2.0, 0.0, 0.0,
+    0.5, 1.0, 0.0,
+    1.5, 1.0, 0.0,
+    1.0, 2.0, 0.0,
+
+    //rear face
+    0.0, 0.0, -2.0,
+    1.0, 0.0, -2.0,
+    2.0, 0.0, -2.0,
+    0.5, 1.0, -2.0,
+    1.5, 1.0, -2.0,
+    1.0, 2.0, -2.0,
+  ];
+
+  var vertexIndices =
+  [
+    //front face
+    0,1,3,
+    1,3,4,
+    1,2,4,
+    3,4,5,
+    
+    //rear face
+    6,7,9,
+    7,9,10,
+    7,8,10,
+    9,10,11,
+    
+    //left side
+    0,3,6,
+    3,6,9,
+    3,5,9,
+    5,9,11,
+    
+    //right side
+    2,4,8,
+    4,8,10,
+    4,5,10,
+    5,10,11,
+    //bottom faces
+    0,6,8,
+    8,2,0
+  ];
+
+  var colors =
+  [
+    //front face  
+     0.0, 0.0, 1.0,
+     1.0, 1.0, 1.0,
+     0.0, 0.0, 1.0,
+     0.0, 0.0, 1.0,
+     0.0, 0.0, 1.0,
+     1.0, 1.0, 1.0,
+  
+    //rear face
+     0.0, 1.0, 1.0,
+     1.0, 1.0, 1.0,
+     0.0, 1.0, 1.0,
+     0.0, 1.0, 1.0,
+     0.0, 1.0, 1.0,
+     1.0, 1.0, 1.0
+  ];
+
+  var PrismGeometry = function()
+  {
+    Geometry.call(this);
+
+    this.vertices = vertices;
+    this.vertexIndices = vertexIndices;
+    this.colors = colors;
+  };
+
+  PrismGeometry.prototype = new Geometry();
+
+  return PrismGeometry;
+});
+define('eight',['require','eight/core','eight/core/Object3D','eight/core/Geometry','eight/cameras/Camera','eight/cameras/PerspectiveCamera','eight/renderers/WebGLRenderer','eight/scenes/Scene','eight/objects/Mesh','eight/utils/WindowAnimationRunner','eight/utils/WebGLContextMonitor','eight/math/e3ga/Euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/c3ga/Conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/PrismGeometry'],function(require) {
   var eight = require('eight/core');
+  eight.Object3D = require('eight/core/Object3D');
+  eight.Geometry = require('eight/core/Geometry');
   eight.Camera = require('eight/cameras/Camera');
   eight.PerspectiveCamera = require('eight/cameras/PerspectiveCamera');
   eight.WebGLRenderer = require('eight/renderers/WebGLRenderer');
   eight.Scene = require('eight/scenes/Scene');
-  eight.Prism = require('eight/objects/Prism');
+  eight.Mesh  = require('eight/objects/Mesh');
   eight.WindowAnimationRunner = require('eight/utils/WindowAnimationRunner');
   eight.WebGLContextMonitor = require('eight/utils/WebGLContextMonitor');
   eight.Euclidean3 = require('eight/math/e3ga/Euclidean3');
@@ -951,6 +1047,7 @@ define('eight',['require','eight/core','eight/cameras/Camera','eight/cameras/Per
   eight.Conformal3 = require('eight/math/c3ga/Conformal3');
   eight.scalarC3   = require('eight/math/c3ga/scalarC3');
   eight.vectorC3   = require('eight/math/c3ga/vectorC3');
+  eight.PrismGeometry = require('eight/geometries/PrismGeometry');
   return eight;
 });
 
