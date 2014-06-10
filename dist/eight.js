@@ -912,41 +912,41 @@ define('eight/utils/WindowAnimationRunner',[],function()
   return WindowAnimationRunner;
 
 });
-define('eight/utils/WebGLContextMonitor',[],function() {
-
-  var WebGLContextMonitor = function(canvas, contextLoss, contextGain)
+define('eight/utils/webGLContextMonitor',[],function()
+{
+  var constructor = function(canvas, contextLoss, contextGain)
   {
-    this.canvas = canvas;
-    var self = this;
-
-    this.webGLContextLost = function(event)
+    var webGLContextLost = function(event)
     {
       event.preventDefault();
       contextLoss();
     };
 
-    this.webGLContextRestored = function(event)
+    var webGLContextRestored = function(event)
     {
       event.preventDefault();
-      self.gl = self.canvas.getContext("webgl");
-      contextGain(self.gl);
+      var gl = canvas.getContext("webgl");
+      contextGain(gl);
     };
+
+    var api =
+    {
+      start: function()
+      {
+        canvas.addEventListener('webglcontextlost', webGLContextLost, false);
+        canvas.addEventListener('webglcontextrestored', webGLContextRestored, false);
+      },
+      stop: function()
+      {
+        canvas.removeEventListener('webglcontextrestored', webGLContextRestored, false);
+        canvas.removeEventListener('webglcontextlost', webGLContextLost, false);
+      }
+    };
+
+    return api;
   };
 
-  WebGLContextMonitor.prototype.start = function()
-  {
-    this.canvas.addEventListener('webglcontextlost', this.webGLContextLost, false);
-    this.canvas.addEventListener('webglcontextrestored', this.webGLContextRestored, false);
-  };
-
-  WebGLContextMonitor.prototype.stop = function()
-  {
-    this.canvas.removeEventListener('webglcontextrestored', this.webGLContextRestored, false);
-    this.canvas.removeEventListener('webglcontextlost', this.webGLContextLost, false);
-  };
-
-  return WebGLContextMonitor;
-
+  return constructor;
 });
 define('eight/math/e3ga/Euclidean3',[],function() {
 
@@ -1088,7 +1088,7 @@ define('eight/geometries/prismGeometry',['eight/core/geometry'], function(geomet
 
   return constructor;
 });
-define('eight',['require','eight/core','eight/core/object3D','eight/core/geometry','eight/cameras/camera','eight/cameras/perspectiveCamera','eight/renderers/webGLRenderer','eight/scenes/scene','eight/objects/mesh','eight/utils/WindowAnimationRunner','eight/utils/WebGLContextMonitor','eight/math/e3ga/Euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/c3ga/Conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/prismGeometry'],function(require) {
+define('eight',['require','eight/core','eight/core/object3D','eight/core/geometry','eight/cameras/camera','eight/cameras/perspectiveCamera','eight/renderers/webGLRenderer','eight/scenes/scene','eight/objects/mesh','eight/utils/WindowAnimationRunner','eight/utils/webGLContextMonitor','eight/math/e3ga/Euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/c3ga/Conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/prismGeometry'],function(require) {
   var eight = require('eight/core');
   eight.object3D = require('eight/core/object3D');
   eight.geometry = require('eight/core/geometry');
@@ -1098,7 +1098,7 @@ define('eight',['require','eight/core','eight/core/object3D','eight/core/geometr
   eight.scene = require('eight/scenes/scene');
   eight.mesh  = require('eight/objects/mesh');
   eight.WindowAnimationRunner = require('eight/utils/WindowAnimationRunner');
-  eight.WebGLContextMonitor = require('eight/utils/WebGLContextMonitor');
+  eight.webGLContextMonitor = require('eight/utils/webGLContextMonitor');
   eight.Euclidean3 = require('eight/math/e3ga/Euclidean3');
   eight.scalarE3   = require('eight/math/e3ga/scalarE3');
   eight.vectorE3   = require('eight/math/e3ga/vectorE3');
