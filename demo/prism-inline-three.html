@@ -1,12 +1,13 @@
 <!doctype html>
 <html>
   <head>
-    <title>EIGHT Demo</title>
+    <title>THREE Demo</title>
     <!-- Don't use webgl-debug.js outside of development. -->
-    <!--script src="../manual-deps/khronos/webgl-debug.js"></script-->
+    <script src="../manual-deps/khronos/webgl-debug.js"></script>
     <script src="../vendor/gl-matrix/dist/gl-matrix.js"></script>
-    <script src="../dist/eight.js"></script>
+    <script src="../vendor/threejs/build/three.js"></script>
     <script src="../vendor/stats.js/build/stats.min.js"></script>
+    <script src="../dist/eight.js"></script>
     <script>
       function initWebGL()
       {
@@ -14,11 +15,14 @@
         if (typeof WebGLDebugUtils !== 'undefined')
         {
           canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas(canvas);
-          canvas.loseContextInNCalls(1000);
-          canvas.setRestoreTimeout(3000);
+          //canvas.loseContextInNCalls(1000);
+          //canvas.setRestoreTimeout(3000);
         }
-        var scene = EIGHT.scene();
-        var renderer = EIGHT.webGLRenderer();
+        var scene = new THREE.Scene();
+        var renderer = new THREE.WebGLRenderer({'canvas': canvas});
+        renderer.setClearColor(new THREE.Color(0x080808),1);
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        document.body.appendChild( renderer.domElement );
 
         var stats = new Stats();
         stats.setMode(0);
@@ -30,6 +34,8 @@
         var tick = function(time)
         {
           stats.begin();
+//        mesh.rotation.x += 0.1;
+          mesh.rotation.y += 0.1;
           renderer.render(scene, camera);
           stats.end();
         };
@@ -45,29 +51,23 @@
         var tearDown = function()
         {
           monitor.stop();
-          scene.tearDown();
         };
 
         var runner = new EIGHT.WindowAnimationRunner(tick, terminate, setUp, tearDown, window);
-        var camera = EIGHT.perspectiveCamera(45, canvas.width / canvas.height, 0.1, 100.0);
+        var camera = new THREE.PerspectiveCamera(45, canvas.width / canvas.height, 0.1, 100.0);
+        camera.position.z = 5;
 
-        var mesh = EIGHT.mesh(EIGHT.prismGeometry());
+        var mesh = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshNormalMaterial({'wireframe':true}));
         scene.add(mesh);
 
         var onContextLoss = function()
         {
-          console.log("context loss");
           runner.stop();
-          renderer.onContextLoss();
-          scene.onContextLoss();
         };
 
         var onContextGain = function(gl)
         {
-          console.log("context gain");
-          scene.onContextGain(gl);
-          renderer.onContextGain(gl);
-          runner.start();
+//        initWebGL();
         };
 
         var monitor = new EIGHT.WebGLContextMonitor(canvas, onContextLoss, onContextGain);
@@ -96,7 +96,7 @@
           }
           gl = WebGLDebugUtils.makeDebugContext(gl, undefined, onGLCall);
         }
-        onContextGain(gl);
+        runner.start();
       }
     </script>
   </head>

@@ -21,6 +21,7 @@
     "almond": "~0.2.9",
     "coffee-script": "~1.7.1",
     "gl-matrix": "~2.2.1",
-    "stats.js": "latest"
+    "stats.js": "latest",
+    "threejs": "latest"
   }
 }
