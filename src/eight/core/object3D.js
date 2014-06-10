@@ -29,7 +29,7 @@ define(['eight/math/c3ga/Conformal3'], function(Conformal3)
       {
         console.error("Missing tearDown function");
       },
-      draw: function()
+      draw: function(projectionMatrix)
       {
         console.error("Missing tearDown function");
       }

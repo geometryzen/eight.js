@@ -1,0 +1,136 @@
+define(
+[
+'eight/core/object3D',
+'eight/core/geometry',
+'eight/shaders/shader-vs',
+'eight/shaders/shader-fs'
+],
+function(object3D, geometryConstructor, vs_source, fs_source)
+{
+  var constructor = function(geometry, material)
+  {
+    var that;
+
+    var gl = null;
+    var vs = null;
+    var fs = null;
+    var program = null;
+    var vbo = null;
+    var vbi = null;
+    var vbc = null;
+    var mvMatrixUniform = null;
+    var pMatrixUniform = null;
+    var mvMatrix = mat4.create();
+    var angle = 0;
+    geometry = geometry || geometryConstructor();
+
+    // Add shared variables and functions to my.
+
+    that = object3D({});
+
+    that.projectionMatrix = mat4.create();
+
+    that.onContextGain = function(context)
+    {
+      gl = context;
+
+      vs = gl.createShader(gl.VERTEX_SHADER);
+      gl.shaderSource(vs, vs_source);
+      gl.compileShader(vs);
+      if (!gl.getShaderParameter(vs, gl.COMPILE_STATUS) && !gl.isContextLost())
+      {
+        var infoLog = gl.getShaderInfoLog(vs);
+        alert("Error compiling vertex shader:\n" + infoLog);
+      }
+
+      fs = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(fs, fs_source);
+      gl.compileShader(fs);
+      if (!gl.getShaderParameter(fs, gl.COMPILE_STATUS) && !gl.isContextLost())
+      {
+        var infoLog = gl.getShaderInfoLog(fs);
+        alert("Error compiling fragment shader:\n" + infoLog);
+      }
+
+      program = gl.createProgram();
+      
+      gl.attachShader(program, vs);
+      gl.attachShader(program, fs);
+      gl.linkProgram(program);
+
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS) && !gl.isContextLost())
+      {
+        var infoLog = gl.getProgramInfoLog(program);
+        alert("Error linking program:\n" + infoLog);
+      }
+
+      vbc = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbc);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geometry.colors), gl.STATIC_DRAW);
+
+      vbo = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geometry.vertices), gl.STATIC_DRAW);
+
+      vbi = gl.createBuffer();
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vbi);
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(geometry.vertexIndices), gl.STATIC_DRAW);
+
+      mvMatrixUniform = gl.getUniformLocation(program, "uMVMatrix");
+      pMatrixUniform  = gl.getUniformLocation(program, "uPMatrix");
+    };
+
+    that.onContextLoss = function()
+    {
+      vs = null;
+      fs = null;
+      program = null;
+      vbc = null;
+      vbo = null;
+      vbi = null;
+      mvMatrixUniform = null;
+      pMatrixUniform = null;
+    };
+
+    that.tearDown = function()
+    {
+      gl.deleteShader(vs);
+      gl.deleteShader(fs);
+      gl.deleteProgram(program);
+    };
+
+    that.move = function()
+    {
+      mat4.identity(mvMatrix);
+      mat4.translate(mvMatrix, mvMatrix, [-1.0, -1.0, -7.0]);
+      mat4.rotate(mvMatrix, mvMatrix, angle, [0.0, 1.0, 0.0]);
+      angle += 0.01;
+    };
+
+    that.draw = function(projectionMatrix)
+    {
+      gl.useProgram(program);
+
+      gl.uniformMatrix4fv(mvMatrixUniform, false, mvMatrix);
+      gl.uniformMatrix4fv(pMatrixUniform, false, projectionMatrix);
+
+      var vertexPositionAttribute = gl.getAttribLocation(program, "aVertexPosition");
+      gl.enableVertexAttribArray(vertexPositionAttribute);
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+      gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
+
+      var vertexColorAttribute = gl.getAttribLocation(program, "aVertexColor");
+      gl.enableVertexAttribArray(vertexColorAttribute);
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbc);
+      gl.vertexAttribPointer(vertexColorAttribute, 3, gl.FLOAT, false, 0, 0);
+
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vbi);
+      var mode = geometry.primitiveMode(gl);
+      gl.drawElements(mode, geometry.vertexIndices.length, gl.UNSIGNED_SHORT, 0);
+    };
+
+    return that;
+  };
+
+  return constructor;
+});

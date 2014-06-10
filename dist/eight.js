@@ -475,7 +475,7 @@ define('eight/core/object3D',['eight/math/c3ga/Conformal3'], function(Conformal3
       {
         console.error("Missing tearDown function");
       },
-      draw: function()
+      draw: function(projectionMatrix)
       {
         console.error("Missing tearDown function");
       }
@@ -505,7 +505,7 @@ define('eight/core/geometry',['eight/math/c3ga/Conformal3'], function(Conformal3
       vertices: [],
       vertexIndices: [],
       colors: [],
-      primitives: function(gl)
+      primitiveMode: function(gl)
       {
         return gl.TRIANGLES;
       }
@@ -597,9 +597,10 @@ define('eight/renderers/WebGLRenderer',[],function() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     var children = scene.children;
-    for(var i = 0, length = children.length; i < length; i++) {
+    for(var i = 0, length = children.length; i < length; i++)
+    {
       children[i].move();
-      children[i].draw(gl, camera.projectionMatrix);
+      children[i].draw(camera.projectionMatrix);
     }
   };
 
@@ -689,7 +690,7 @@ define('eight/shaders/shader-fs',[],function() {
   return source;
 });
 define(
-'eight/objects/Mesh',[
+'eight/objects/mesh',[
 'eight/core/object3D',
 'eight/core/geometry',
 'eight/shaders/shader-vs',
@@ -697,122 +698,132 @@ define(
 ],
 function(object3D, geometryConstructor, vs_source, fs_source)
 {
-  var angle = 0;
-
-  var Mesh = function(geometry, material)
+  var constructor = function(geometry, material)
   {
-    this.mvMatrix = mat4.create();
-    this.geometry = geometry !== undefined ? geometry : geometryConstructor();
-  };
+    var that;
 
-  Mesh.prototype.onContextGain = function(gl)
-  {
-    this.gl = gl;
+    var gl = null;
+    var vs = null;
+    var fs = null;
+    var program = null;
+    var vbo = null;
+    var vbi = null;
+    var vbc = null;
+    var mvMatrixUniform = null;
+    var pMatrixUniform = null;
+    var mvMatrix = mat4.create();
+    var angle = 0;
+    geometry = geometry || geometryConstructor();
 
-    this.vs = gl.createShader(gl.VERTEX_SHADER);
-    gl.shaderSource(this.vs, vs_source);
-    gl.compileShader(this.vs);
-    if (!gl.getShaderParameter(this.vs, gl.COMPILE_STATUS) && !gl.isContextLost())
+    // Add shared variables and functions to my.
+
+    that = object3D({});
+
+    that.projectionMatrix = mat4.create();
+
+    that.onContextGain = function(context)
     {
-      var infoLog = gl.getShaderInfoLog(this.vs);
-      alert("Error compiling vertex shader:\n" + infoLog);
-    }
+      gl = context;
 
-    this.fs = gl.createShader(gl.FRAGMENT_SHADER);
-    gl.shaderSource(this.fs, fs_source);
-    gl.compileShader(this.fs);
-    if (!gl.getShaderParameter(this.fs, gl.COMPILE_STATUS) && !gl.isContextLost())
+      vs = gl.createShader(gl.VERTEX_SHADER);
+      gl.shaderSource(vs, vs_source);
+      gl.compileShader(vs);
+      if (!gl.getShaderParameter(vs, gl.COMPILE_STATUS) && !gl.isContextLost())
+      {
+        var infoLog = gl.getShaderInfoLog(vs);
+        alert("Error compiling vertex shader:\n" + infoLog);
+      }
+
+      fs = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(fs, fs_source);
+      gl.compileShader(fs);
+      if (!gl.getShaderParameter(fs, gl.COMPILE_STATUS) && !gl.isContextLost())
+      {
+        var infoLog = gl.getShaderInfoLog(fs);
+        alert("Error compiling fragment shader:\n" + infoLog);
+      }
+
+      program = gl.createProgram();
+      
+      gl.attachShader(program, vs);
+      gl.attachShader(program, fs);
+      gl.linkProgram(program);
+
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS) && !gl.isContextLost())
+      {
+        var infoLog = gl.getProgramInfoLog(program);
+        alert("Error linking program:\n" + infoLog);
+      }
+
+      vbc = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbc);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geometry.colors), gl.STATIC_DRAW);
+
+      vbo = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geometry.vertices), gl.STATIC_DRAW);
+
+      vbi = gl.createBuffer();
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vbi);
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(geometry.vertexIndices), gl.STATIC_DRAW);
+
+      mvMatrixUniform = gl.getUniformLocation(program, "uMVMatrix");
+      pMatrixUniform  = gl.getUniformLocation(program, "uPMatrix");
+    };
+
+    that.onContextLoss = function()
     {
-      var infoLog = gl.getShaderInfoLog(this.fs);
-      alert("Error compiling fragment shader:\n" + infoLog);
-    }
+      vs = null;
+      fs = null;
+      program = null;
+      vbc = null;
+      vbo = null;
+      vbi = null;
+      mvMatrixUniform = null;
+      pMatrixUniform = null;
+    };
 
-    this.program = gl.createProgram();
-    
-    gl.attachShader(this.program, this.vs);
-    gl.attachShader(this.program, this.fs);
-    gl.linkProgram(this.program);
-
-    if (!gl.getProgramParameter(this.program, gl.LINK_STATUS) && !gl.isContextLost())
+    that.tearDown = function()
     {
-      var infoLog = gl.getProgramInfoLog(this.program);
-      alert("Error linking program:\n" + infoLog);
-    }
+      gl.deleteShader(vs);
+      gl.deleteShader(fs);
+      gl.deleteProgram(program);
+    };
 
-    var geometry = this.geometry;
-    this.vbc = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vbc);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geometry.colors), gl.STATIC_DRAW);
+    that.move = function()
+    {
+      mat4.identity(mvMatrix);
+      mat4.translate(mvMatrix, mvMatrix, [-1.0, -1.0, -7.0]);
+      mat4.rotate(mvMatrix, mvMatrix, angle, [0.0, 1.0, 0.0]);
+      angle += 0.01;
+    };
 
-    this.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geometry.vertices), gl.STATIC_DRAW);
+    that.draw = function(projectionMatrix)
+    {
+      gl.useProgram(program);
 
-    this.vbi = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.vbi);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(geometry.vertexIndices), gl.STATIC_DRAW);
+      gl.uniformMatrix4fv(mvMatrixUniform, false, mvMatrix);
+      gl.uniformMatrix4fv(pMatrixUniform, false, projectionMatrix);
 
-    this.mvMatrixUniform = gl.getUniformLocation(this.program, "uMVMatrix");
-    this.pMatrixUniform  = gl.getUniformLocation(this.program, "uPMatrix");
-  }
+      var vertexPositionAttribute = gl.getAttribLocation(program, "aVertexPosition");
+      gl.enableVertexAttribArray(vertexPositionAttribute);
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+      gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
 
-  Mesh.prototype.onContextLoss = function()
-  {
-    delete this.vs;
-    delete this.fs;
-    delete this.program;
-    delete this.vbc;
-    delete this.vbo;
-    delete this.vbi;
-    delete this.mvMatrixUniform;
-    delete this.pMatrixUniform;
-  }
+      var vertexColorAttribute = gl.getAttribLocation(program, "aVertexColor");
+      gl.enableVertexAttribArray(vertexColorAttribute);
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbc);
+      gl.vertexAttribPointer(vertexColorAttribute, 3, gl.FLOAT, false, 0, 0);
 
-  Mesh.prototype.tearDown = function()
-  {
-    var gl = this.gl;
-    gl.deleteShader(this.vs);
-    delete this.vs;
-    gl.deleteShader(this.fs);
-    delete this.fs;
-    gl.deleteProgram(this.program);
-    delete this.program;
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vbi);
+      var mode = geometry.primitiveMode(gl);
+      gl.drawElements(mode, geometry.vertexIndices.length, gl.UNSIGNED_SHORT, 0);
+    };
+
+    return that;
   };
 
-  Mesh.prototype.move = function()
-  {
-    mat4.identity(this.mvMatrix);
-    mat4.translate(this.mvMatrix, this.mvMatrix, [-1.0, -1.0, -7.0]);
-    mat4.rotate(this.mvMatrix, this.mvMatrix, angle, [0.0, 1.0, 0.0]);
-    angle += 0.01;
-  };
-
-  Mesh.prototype.draw = function(gl, projectionMatrix)
-  {
-//    var program = this.program;
-//    var geometry = this.geometry;
-
-    gl.useProgram(this.program);
-
-    gl.uniformMatrix4fv(this.mvMatrixUniform, false, this.mvMatrix);
-    gl.uniformMatrix4fv(this.pMatrixUniform, false, projectionMatrix);
-
-    var vertexPositionAttribute = gl.getAttribLocation(this.program, "aVertexPosition");
-    gl.enableVertexAttribArray(vertexPositionAttribute);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-    gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
-
-    var vertexColorAttribute = gl.getAttribLocation(this.program, "aVertexColor");
-    gl.enableVertexAttribArray(vertexColorAttribute);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vbc);
-    gl.vertexAttribPointer(vertexColorAttribute, 3, gl.FLOAT, false, 0, 0);
-
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.vbi);
-    var mode = this.geometry.primitives(gl);
-    gl.drawElements(mode, this.geometry.vertexIndices.length, gl.UNSIGNED_SHORT, 0);
-  };
-
-  return Mesh;
+  return constructor;
 });
 define('eight/utils/WindowAnimationRunner',[],function()
 {
@@ -1080,7 +1091,7 @@ define('eight/geometries/prismGeometry',['eight/core/geometry'], function(geomet
 
   return constructor;
 });
-define('eight',['require','eight/core','eight/core/object3D','eight/core/geometry','eight/cameras/camera','eight/cameras/perspectiveCamera','eight/renderers/WebGLRenderer','eight/scenes/scene','eight/objects/Mesh','eight/utils/WindowAnimationRunner','eight/utils/WebGLContextMonitor','eight/math/e3ga/Euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/c3ga/Conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/prismGeometry'],function(require) {
+define('eight',['require','eight/core','eight/core/object3D','eight/core/geometry','eight/cameras/camera','eight/cameras/perspectiveCamera','eight/renderers/WebGLRenderer','eight/scenes/scene','eight/objects/mesh','eight/utils/WindowAnimationRunner','eight/utils/WebGLContextMonitor','eight/math/e3ga/Euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/c3ga/Conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/prismGeometry'],function(require) {
   var eight = require('eight/core');
   eight.object3D = require('eight/core/object3D');
   eight.geometry = require('eight/core/geometry');
@@ -1088,7 +1099,7 @@ define('eight',['require','eight/core','eight/core/object3D','eight/core/geometr
   eight.perspectiveCamera = require('eight/cameras/perspectiveCamera');
   eight.WebGLRenderer = require('eight/renderers/WebGLRenderer');
   eight.scene = require('eight/scenes/scene');
-  eight.Mesh  = require('eight/objects/Mesh');
+  eight.mesh  = require('eight/objects/mesh');
   eight.WindowAnimationRunner = require('eight/utils/WindowAnimationRunner');
   eight.WebGLContextMonitor = require('eight/utils/WebGLContextMonitor');
   eight.Euclidean3 = require('eight/math/e3ga/Euclidean3');

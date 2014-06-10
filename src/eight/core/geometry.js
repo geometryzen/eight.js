@@ -15,7 +15,7 @@ define(['eight/math/c3ga/Conformal3'], function(Conformal3)
       vertices: [],
       vertexIndices: [],
       colors: [],
-      primitives: function(gl)
+      primitiveMode: function(gl)
       {
         return gl.TRIANGLES;
       }

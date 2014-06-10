@@ -28,9 +28,10 @@ define(function() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     var children = scene.children;
-    for(var i = 0, length = children.length; i < length; i++) {
+    for(var i = 0, length = children.length; i < length; i++)
+    {
       children[i].move();
-      children[i].draw(gl, camera.projectionMatrix);
+      children[i].draw(camera.projectionMatrix);
     }
   };
 
