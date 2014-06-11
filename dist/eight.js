@@ -452,20 +452,65 @@ define('eight/math/c3ga/conformal3',[],function()
 
   return euclidean3;
 });
-define('eight/core/object3D',['eight/math/c3ga/conformal3'], function(conformal3)
+define('eight/math/e3ga/euclidean3',[],function()
 {
-  var constructor = function(spec, my)
+  var euclidean3 = function(w, x, y, z, xy, yz, zx, xyz)
   {
-    var that;
+    w = w || 0;
+    x = x || 0;
+    y = y || 0;
+    z = z || 0;
+    xy = xy || 0;
+    yz = yz || 0;
+    zx = zx || 0;
+    xyz = xyz || 0;
 
-    // Other private instance variables.
+    var Euclidean3 =
+    {
+      w: w,
+      x: x,
+      y: y,
+      z: z,
+      xy: xy,
+      yz: yz,
+      zx: zx,
+      xyz: xyz,
+      cross: function(mv)
+      {
+        return euclidean3(0, y*mv.z-z*mv.y, z*mv.x-x*mv.z, x*mv.y-y*mv.x, 0, 0, 0, 0);
+      },
+      div: function(mv)
+      {
+        return euclidean3(w/mv.w, x/mv.w, y/mv.w, z/mv.w, 0, 0, 0, 0);
+      },
+      mul: function(mv)
+      {
+        return euclidean3(w*mv.w, x*mv.w, y*mv.w, z*mv.w, xy*mv.w, yz*mv.w, zx*mv.w, xyz*mv.w);
+      },
+      norm: function()
+      {
+        return euclidean3(Math.sqrt(x*x+y*y+z*z), 0, 0, 0, 0, 0, 0, 0);
+      },
+      sub: function(mv)
+      {
+        return euclidean3(w-mv.w, x-mv.x, y-mv.y, z-mv.z, xy-mv.xy, yz-mv.yz, zx-mv.zx, xyz-mv.xyz);
+      }
+    };
+    return Euclidean3;
+  };
 
+  return euclidean3;
+});
+define('eight/core/object3D',['eight/math/c3ga/conformal3','eight/math/e3ga/euclidean3'], function(conformal3, euclidean3)
+{
+  var object3D = function(spec, my)
+  {
     my = my || {};
 
-    // Add shared variables and functions to my.
-
-    that =
+    var that =
     {
+      position: euclidean3(0,0,0,0,0,0,0,0),
+      attitude: euclidean3(1,0,0,0,0,0,0,0),
       transform: conformal3(),
       onContextGain: function(gl)
       {
@@ -479,22 +524,20 @@ define('eight/core/object3D',['eight/math/c3ga/conformal3'], function(conformal3
       {
         console.error("Missing tearDown function");
       },
-      move: function()
+      updateMatrix: function()
       {
-        console.error("Missing tearDown function");
+        console.error("Missing updateMatrix function");
       },
       draw: function(projectionMatrix)
       {
-        console.error("Missing tearDown function");
+        console.error("Missing draw function");
       }
     };
-
-    // Add privileged methods to that.
 
     return that;
   };
 
-  return constructor;
+  return object3D;
 });
 define('eight/core/geometry',['eight/math/c3ga/conformal3'], function(conformal3)
 {
@@ -612,7 +655,6 @@ define('eight/renderers/webGLRenderer',[],function()
         var children = scene.children;
         for(var i = 0, length = children.length; i < length; i++)
         {
-          children[i].move();
           children[i].draw(camera.projectionMatrix);
         }
       },
@@ -743,10 +785,8 @@ define(
 ],
 function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
 {
-  var constructor = function(geometry, material)
+  var mesh = function(geometry, material)
   {
-    var that;
-
     var gl = null;
     var vs = null;
     var fs = null;
@@ -759,11 +799,10 @@ function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
     var pMatrixUniform = null;
     var mvMatrix = mat4.create();
     var normalMatrix = mat3.create();
-    var angle = 0;
     geometry = geometry || geometryConstructor();
     material = material || meshBasicMaterial({'color': Math.random() * 0xffffff});
 
-    that = object3D({});
+    var that = object3D({});
 
     that.projectionMatrix = mat4.create();
 
@@ -837,20 +876,29 @@ function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
       gl.deleteProgram(program);
     };
 
-    that.move = function()
+    that.updateMatrix = function()
     {
+      // The following performs the rotation first followed by the translation.
+      var v = vec3.fromValues(that.position.x, that.position.y, that.position.z);
+      var q = quat.fromValues(-that.attitude.yz,-that.attitude.zx,-that.attitude.xy,that.attitude.w);
+/*
       mat4.identity(mvMatrix);
-      mat4.translate(mvMatrix, mvMatrix, [0.0, 0.0, -3.0]);
-      mat4.rotate(mvMatrix, mvMatrix, angle, [0.0, 1.0, 0.0]);
-      mat4.rotate(mvMatrix, mvMatrix, angle, [1.0, 0.0, 0.0]);
-      angle += 0.05;
+      mat4.translate(mvMatrix, mvMatrix, v);
+      var quatMat = mat4.create();
+      mat4.fromQuat(quatMat, q);
+      mat4.multiply(mvMatrix, mvMatrix, quatMat);
+*/
+      mat4.fromRotationTranslation(mvMatrix, q, v);
 
+      // TODO: Should we be computing this inside the shader?
       mat3.normalFromMat4(normalMatrix, mvMatrix);
     };
 
     that.draw = function(projectionMatrix)
     {
       gl.useProgram(program);
+
+      that.updateMatrix();
 
       gl.uniformMatrix4fv(mvMatrixUniform, false, mvMatrix);
       gl.uniformMatrix3fv(normalMatrixUniform, false, normalMatrix);
@@ -878,7 +926,7 @@ function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
     return that;
   };
 
-  return constructor;
+  return mesh;
 });
 define('eight/utils/windowAnimationRunner',[],function()
 {
@@ -1010,42 +1058,6 @@ define('eight/utils/webGLContextMonitor',[],function()
 
   return constructor;
 });
-define('eight/math/e3ga/euclidean3',[],function()
-{
-  var euclidean3 = function(w, x, y, z, xy, yz, zx, xyz)
-  {
-    var api =
-    {
-      w: w,
-      x: x,
-      y: y,
-      z: z,
-      xy: xy,
-      yz: yz,
-      zx: zx,
-      xyz: xyz,
-      cross: function(mv)
-      {
-        return euclidean3(0, y*mv.z-z*mv.y, z*mv.x-x*mv.z, x*mv.y-y*mv.x, 0, 0, 0, 0);
-      },
-      div: function(mv)
-      {
-        return euclidean3(w/mv.w, x/mv.w, y/mv.w, z/mv.w, 0, 0, 0, 0);
-      },
-      norm: function()
-      {
-        return euclidean3(Math.sqrt(x*x+y*y+z*z), 0, 0, 0, 0, 0, 0, 0);
-      },
-      sub: function(mv)
-      {
-        return euclidean3(w-mv.w, x-mv.x, y-mv.y, z-mv.z, xy-mv.xy, yz-mv.yz, zx-mv.zx, xyz-mv.xyz);
-      }
-    };
-    return api;
-  };
-
-  return euclidean3;
-});
 define('eight/math/e3ga/scalarE3',['eight/math/e3ga/euclidean3'], function(euclidean3)
 {
   return function(w)
@@ -1058,6 +1070,13 @@ define('eight/math/e3ga/vectorE3',['eight/math/e3ga/euclidean3'], function(eucli
   return function(x, y, z)
   {
     return euclidean3(0, x, y, z, 0, 0, 0, 0);
+  };
+});
+define('eight/math/e3ga/bivectorE3',['eight/math/e3ga/euclidean3'], function(euclidean3)
+{
+  return function(xy, yz, zx)
+  {
+    return euclidean3(0, 0, 0, 0, xy, yz, zx, 0);
   };
 });
 define('eight/math/c3ga/scalarC3',['eight/math/c3ga/conformal3'], function(conformal3)
@@ -1170,20 +1189,20 @@ define('eight/geometries/prismGeometry',['eight/core/geometry','eight/math/e3ga/
   var vertexList =
   [
     // front face
-    vectorE3(0.0, 0.0, 0.0),
-    vectorE3(1.0, 0.0, 0.0),
-    vectorE3(2.0, 0.0, 0.0),
-    vectorE3(0.5, 1.0, 0.0),
-    vectorE3(1.5, 1.0, 0.0),
-    vectorE3(1.0, 2.0, 0.0),
+    vectorE3(-1.0, 0.0, +0.5),
+    vectorE3( 0.0, 0.0, +0.5),
+    vectorE3( 1.0, 0.0, +0.5),
+    vectorE3(-0.5, 1.0, +0.5),
+    vectorE3( 0.5, 1.0, +0.5),
+    vectorE3( 0.0, 2.0, +0.5),
 
     // rear face
-    vectorE3(0.0, 0.0, -2.0),
-    vectorE3(1.0, 0.0, -2.0),
-    vectorE3(2.0, 0.0, -2.0),
-    vectorE3(0.5, 1.0, -2.0),
-    vectorE3(1.5, 1.0, -2.0),
-    vectorE3(1.0, 2.0, -2.0),
+    vectorE3(-1.0, 0.0, -0.5),
+    vectorE3( 0.0, 0.0, -0.5),
+    vectorE3( 1.0, 0.0, -0.5),
+    vectorE3(-0.5, 1.0, -0.5),
+    vectorE3( 0.5, 1.0, -0.5),
+    vectorE3( 0.0, 2.0, -0.5)
   ];
 
   // I'm not sure why the left and right side have 4 faces, but the botton only 2.
@@ -1275,21 +1294,30 @@ define('eight/materials/meshNormalMaterial',['eight/core/material'], function(ma
 
   return constructor;
 });
-define('eight',['require','eight/core','eight/core/object3D','eight/core/geometry','eight/core/material','eight/cameras/camera','eight/cameras/perspectiveCamera','eight/renderers/webGLRenderer','eight/scenes/scene','eight/objects/mesh','eight/utils/windowAnimationRunner','eight/utils/webGLContextMonitor','eight/math/e3ga/euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/c3ga/conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/boxGeometry','eight/geometries/prismGeometry','eight/materials/meshBasicMaterial','eight/materials/meshNormalMaterial'],function(require) {
+define('eight',['require','eight/core','eight/core/object3D','eight/core/geometry','eight/core/material','eight/cameras/camera','eight/cameras/perspectiveCamera','eight/renderers/webGLRenderer','eight/scenes/scene','eight/objects/mesh','eight/utils/windowAnimationRunner','eight/utils/webGLContextMonitor','eight/math/e3ga/euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/e3ga/bivectorE3','eight/math/c3ga/conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/boxGeometry','eight/geometries/prismGeometry','eight/materials/meshBasicMaterial','eight/materials/meshNormalMaterial'],function(require)
+{
   var eight = require('eight/core');
+
   eight.object3D = require('eight/core/object3D');
+
   eight.geometry = require('eight/core/geometry');
   eight.material = require('eight/core/material');
+
   eight.camera = require('eight/cameras/camera');
   eight.perspectiveCamera = require('eight/cameras/perspectiveCamera');
+
   eight.webGLRenderer = require('eight/renderers/webGLRenderer');
   eight.scene = require('eight/scenes/scene');
   eight.mesh  = require('eight/objects/mesh');
+
   eight.windowAnimationRunner = require('eight/utils/windowAnimationRunner');
   eight.webGLContextMonitor = require('eight/utils/webGLContextMonitor');
+
   eight.euclidean3 = require('eight/math/e3ga/euclidean3');
   eight.scalarE3   = require('eight/math/e3ga/scalarE3');
   eight.vectorE3   = require('eight/math/e3ga/vectorE3');
+  eight.bivectorE3 = require('eight/math/e3ga/bivectorE3');
+
   eight.conformal3 = require('eight/math/c3ga/conformal3');
   eight.scalarC3   = require('eight/math/c3ga/scalarC3');
   eight.vectorC3   = require('eight/math/c3ga/vectorC3');

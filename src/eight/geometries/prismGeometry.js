@@ -12,20 +12,20 @@ define(['eight/core/geometry','eight/math/e3ga/vectorE3'], function(geometry, ve
   var vertexList =
   [
     // front face
-    vectorE3(0.0, 0.0, 0.0),
-    vectorE3(1.0, 0.0, 0.0),
-    vectorE3(2.0, 0.0, 0.0),
-    vectorE3(0.5, 1.0, 0.0),
-    vectorE3(1.5, 1.0, 0.0),
-    vectorE3(1.0, 2.0, 0.0),
+    vectorE3(-1.0, 0.0, +0.5),
+    vectorE3( 0.0, 0.0, +0.5),
+    vectorE3( 1.0, 0.0, +0.5),
+    vectorE3(-0.5, 1.0, +0.5),
+    vectorE3( 0.5, 1.0, +0.5),
+    vectorE3( 0.0, 2.0, +0.5),
 
     // rear face
-    vectorE3(0.0, 0.0, -2.0),
-    vectorE3(1.0, 0.0, -2.0),
-    vectorE3(2.0, 0.0, -2.0),
-    vectorE3(0.5, 1.0, -2.0),
-    vectorE3(1.5, 1.0, -2.0),
-    vectorE3(1.0, 2.0, -2.0),
+    vectorE3(-1.0, 0.0, -0.5),
+    vectorE3( 0.0, 0.0, -0.5),
+    vectorE3( 1.0, 0.0, -0.5),
+    vectorE3(-0.5, 1.0, -0.5),
+    vectorE3( 0.5, 1.0, -0.5),
+    vectorE3( 0.0, 2.0, -0.5)
   ];
 
   // I'm not sure why the left and right side have 4 faces, but the botton only 2.

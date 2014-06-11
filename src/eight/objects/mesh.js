@@ -8,10 +8,8 @@ define(
 ],
 function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
 {
-  var constructor = function(geometry, material)
+  var mesh = function(geometry, material)
   {
-    var that;
-
     var gl = null;
     var vs = null;
     var fs = null;
@@ -24,11 +22,10 @@ function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
     var pMatrixUniform = null;
     var mvMatrix = mat4.create();
     var normalMatrix = mat3.create();
-    var angle = 0;
     geometry = geometry || geometryConstructor();
     material = material || meshBasicMaterial({'color': Math.random() * 0xffffff});
 
-    that = object3D({});
+    var that = object3D({});
 
     that.projectionMatrix = mat4.create();
 
@@ -102,20 +99,29 @@ function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
       gl.deleteProgram(program);
     };
 
-    that.move = function()
+    that.updateMatrix = function()
     {
+      // The following performs the rotation first followed by the translation.
+      var v = vec3.fromValues(that.position.x, that.position.y, that.position.z);
+      var q = quat.fromValues(-that.attitude.yz,-that.attitude.zx,-that.attitude.xy,that.attitude.w);
+/*
       mat4.identity(mvMatrix);
-      mat4.translate(mvMatrix, mvMatrix, [0.0, 0.0, -3.0]);
-      mat4.rotate(mvMatrix, mvMatrix, angle, [0.0, 1.0, 0.0]);
-      mat4.rotate(mvMatrix, mvMatrix, angle, [1.0, 0.0, 0.0]);
-      angle += 0.05;
+      mat4.translate(mvMatrix, mvMatrix, v);
+      var quatMat = mat4.create();
+      mat4.fromQuat(quatMat, q);
+      mat4.multiply(mvMatrix, mvMatrix, quatMat);
+*/
+      mat4.fromRotationTranslation(mvMatrix, q, v);
 
+      // TODO: Should we be computing this inside the shader?
       mat3.normalFromMat4(normalMatrix, mvMatrix);
     };
 
     that.draw = function(projectionMatrix)
     {
       gl.useProgram(program);
+
+      that.updateMatrix();
 
       gl.uniformMatrix4fv(mvMatrixUniform, false, mvMatrix);
       gl.uniformMatrix3fv(normalMatrixUniform, false, normalMatrix);
@@ -143,5 +149,5 @@ function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
     return that;
   };
 
-  return constructor;
+  return mesh;
 });

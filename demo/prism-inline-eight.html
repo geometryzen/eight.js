@@ -20,6 +20,18 @@
         var scene = EIGHT.scene();
         var renderer = EIGHT.webGLRenderer();
 
+        var box = EIGHT.mesh(EIGHT.boxGeometry());
+        box.position.x = -1.0;
+        box.position.y = -0.5;
+        box.position.z = -5;
+        scene.add(box);
+        var prism = EIGHT.mesh(EIGHT.prismGeometry());
+        prism.position.z = -5;
+        scene.add(prism);
+
+        var B = EIGHT.bivectorE3(0,0,1);
+        var angle = 0;
+
         var stats = new Stats();
         stats.setMode(0);
         stats.domElement.style.position = 'absolute';
@@ -29,9 +41,15 @@
 
         var tick = function(time)
         {
+          var c = EIGHT.scalarE3(Math.cos(angle/2));
+          var s = EIGHT.scalarE3(Math.sin(angle/2));
+          var R = c.sub(B.mul(s));
+          box.attitude = R;
+          prism.attitude = R;
           stats.begin();
           renderer.render(scene, camera);
           stats.end();
+          angle += 0.01;
         };
         var terminate = function(time)
         {
@@ -50,9 +68,6 @@
 
         var runner = EIGHT.windowAnimationRunner(tick, terminate, setUp, tearDown);
         var camera = EIGHT.perspectiveCamera(45, canvas.width / canvas.height, 0.1, 100.0);
-
-        scene.add(EIGHT.mesh(EIGHT.boxGeometry()));
-        scene.add(EIGHT.mesh(EIGHT.prismGeometry()));
 
         var onContextLoss = function()
         {

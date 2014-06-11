@@ -1,17 +1,13 @@
-define(['eight/math/c3ga/conformal3'], function(conformal3)
+define(['eight/math/c3ga/conformal3','eight/math/e3ga/euclidean3'], function(conformal3, euclidean3)
 {
-  var constructor = function(spec, my)
+  var object3D = function(spec, my)
   {
-    var that;
-
-    // Other private instance variables.
-
     my = my || {};
 
-    // Add shared variables and functions to my.
-
-    that =
+    var that =
     {
+      position: euclidean3(0,0,0,0,0,0,0,0),
+      attitude: euclidean3(1,0,0,0,0,0,0,0),
       transform: conformal3(),
       onContextGain: function(gl)
       {
@@ -25,20 +21,18 @@ define(['eight/math/c3ga/conformal3'], function(conformal3)
       {
         console.error("Missing tearDown function");
       },
-      move: function()
+      updateMatrix: function()
       {
-        console.error("Missing tearDown function");
+        console.error("Missing updateMatrix function");
       },
       draw: function(projectionMatrix)
       {
-        console.error("Missing tearDown function");
+        console.error("Missing draw function");
       }
     };
-
-    // Add privileged methods to that.
 
     return that;
   };
 
-  return constructor;
+  return object3D;
 });

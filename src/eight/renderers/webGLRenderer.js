@@ -26,7 +26,6 @@ define(function()
         var children = scene.children;
         for(var i = 0, length = children.length; i < length; i++)
         {
-          children[i].move();
           children[i].draw(camera.projectionMatrix);
         }
       },
