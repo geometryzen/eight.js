@@ -431,20 +431,28 @@ define('eight/core',[],function() {
 
   return eight;
 });
-define('eight/math/c3ga/Conformal3',[],function() {
-
-  var Conformal3 = function(w, x, y, z)
+define('eight/math/c3ga/conformal3',[],function()
+{
+  var euclidean3 = function(w, x, y, z)
   {
-    this.w = w || 0;
-    this.x = x || 0;
-    this.y = y || 0;
-    this.z = z || 0;
+    w = w || 0;
+    x = x || 0;
+    y = y || 0;
+    z = z || 0;
+
+    var api =
+    {
+      w: w,
+      x: x,
+      y: y,
+      z: z
+    };
+    return api;
   };
 
-  return Conformal3;
-
+  return euclidean3;
 });
-define('eight/core/object3D',['eight/math/c3ga/Conformal3'], function(Conformal3)
+define('eight/core/object3D',['eight/math/c3ga/conformal3'], function(conformal3)
 {
   var constructor = function(spec, my)
   {
@@ -458,7 +466,7 @@ define('eight/core/object3D',['eight/math/c3ga/Conformal3'], function(Conformal3
 
     that =
     {
-      transform: new Conformal3(),
+      transform: conformal3(),
       onContextGain: function(gl)
       {
         console.error("Missing onContextGain function");
@@ -488,9 +496,9 @@ define('eight/core/object3D',['eight/math/c3ga/Conformal3'], function(Conformal3
 
   return constructor;
 });
-define('eight/core/geometry',['eight/math/c3ga/Conformal3'], function(Conformal3)
+define('eight/core/geometry',['eight/math/c3ga/conformal3'], function(conformal3)
 {
-  var constructor = function(spec, my)
+  var geometry = function(spec, my)
   {
     var that;
 
@@ -516,7 +524,7 @@ define('eight/core/geometry',['eight/math/c3ga/Conformal3'], function(Conformal3
     return that;
   };
 
-  return constructor;
+  return geometry;
 });
 define('eight/core/material',[],function()
 {
@@ -849,6 +857,7 @@ function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
 
       var vertexPositionAttribute = gl.getAttribLocation(program, "aVertexPosition");
       gl.enableVertexAttribArray(vertexPositionAttribute);
+
       gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
       gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
 
@@ -1050,18 +1059,18 @@ define('eight/math/e3ga/vectorE3',['eight/math/e3ga/euclidean3'], function(eucli
     return euclidean3(0, x, y, z, 0, 0, 0, 0);
   };
 });
-define('eight/math/c3ga/scalarC3',['eight/math/c3ga/Conformal3'], function(Conformal3)
+define('eight/math/c3ga/scalarC3',['eight/math/c3ga/conformal3'], function(conformal3)
 {
   return function(w)
   {
-    return new Conformal3(w);
+    return conformal3(w);
   };
 });
-define('eight/math/c3ga/vectorC3',['eight/math/c3ga/Conformal3'], function(Conformal3)
+define('eight/math/c3ga/vectorC3',['eight/math/c3ga/conformal3'], function(conformal3)
 {
   return function(x, y, z, o, i)
   {
-    return new Conformal3(0, x, y, z, o, i);
+    return conformal3(0, x, y, z, o, i);
   };
 });
 define('eight/geometries/prismGeometry',['eight/core/geometry','eight/math/e3ga/vectorE3'], function(geometry, vectorE3)
@@ -1183,7 +1192,7 @@ define('eight/materials/meshNormalMaterial',['eight/core/material'], function(ma
 
   return constructor;
 });
-define('eight',['require','eight/core','eight/core/object3D','eight/core/geometry','eight/core/material','eight/cameras/camera','eight/cameras/perspectiveCamera','eight/renderers/webGLRenderer','eight/scenes/scene','eight/objects/mesh','eight/utils/windowAnimationRunner','eight/utils/webGLContextMonitor','eight/math/e3ga/euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/c3ga/Conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/prismGeometry','eight/materials/meshBasicMaterial','eight/materials/meshNormalMaterial'],function(require) {
+define('eight',['require','eight/core','eight/core/object3D','eight/core/geometry','eight/core/material','eight/cameras/camera','eight/cameras/perspectiveCamera','eight/renderers/webGLRenderer','eight/scenes/scene','eight/objects/mesh','eight/utils/windowAnimationRunner','eight/utils/webGLContextMonitor','eight/math/e3ga/euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/c3ga/conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/prismGeometry','eight/materials/meshBasicMaterial','eight/materials/meshNormalMaterial'],function(require) {
   var eight = require('eight/core');
   eight.object3D = require('eight/core/object3D');
   eight.geometry = require('eight/core/geometry');
@@ -1198,7 +1207,7 @@ define('eight',['require','eight/core','eight/core/object3D','eight/core/geometr
   eight.euclidean3 = require('eight/math/e3ga/euclidean3');
   eight.scalarE3   = require('eight/math/e3ga/scalarE3');
   eight.vectorE3   = require('eight/math/e3ga/vectorE3');
-  eight.Conformal3 = require('eight/math/c3ga/Conformal3');
+  eight.conformal3 = require('eight/math/c3ga/conformal3');
   eight.scalarC3   = require('eight/math/c3ga/scalarC3');
   eight.vectorC3   = require('eight/math/c3ga/vectorC3');
   eight.prismGeometry = require('eight/geometries/prismGeometry');

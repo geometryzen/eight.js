@@ -13,7 +13,7 @@ define(function(require) {
   eight.euclidean3 = require('eight/math/e3ga/euclidean3');
   eight.scalarE3   = require('eight/math/e3ga/scalarE3');
   eight.vectorE3   = require('eight/math/e3ga/vectorE3');
-  eight.Conformal3 = require('eight/math/c3ga/Conformal3');
+  eight.conformal3 = require('eight/math/c3ga/conformal3');
   eight.scalarC3   = require('eight/math/c3ga/scalarC3');
   eight.vectorC3   = require('eight/math/c3ga/vectorC3');
   eight.prismGeometry = require('eight/geometries/prismGeometry');

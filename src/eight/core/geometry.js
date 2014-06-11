@@ -1,6 +1,6 @@
-define(['eight/math/c3ga/Conformal3'], function(Conformal3)
+define(['eight/math/c3ga/conformal3'], function(conformal3)
 {
-  var constructor = function(spec, my)
+  var geometry = function(spec, my)
   {
     var that;
 
@@ -26,5 +26,5 @@ define(['eight/math/c3ga/Conformal3'], function(Conformal3)
     return that;
   };
 
-  return constructor;
+  return geometry;
 });

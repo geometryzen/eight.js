@@ -1,4 +1,4 @@
-define(['eight/math/c3ga/Conformal3'], function(Conformal3)
+define(['eight/math/c3ga/conformal3'], function(conformal3)
 {
   var constructor = function(spec, my)
   {
@@ -12,7 +12,7 @@ define(['eight/math/c3ga/Conformal3'], function(Conformal3)
 
     that =
     {
-      transform: new Conformal3(),
+      transform: conformal3(),
       onContextGain: function(gl)
       {
         console.error("Missing onContextGain function");

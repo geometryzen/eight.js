@@ -1,7 +1,7 @@
-define(['eight/math/c3ga/Conformal3'], function(Conformal3)
+define(['eight/math/c3ga/conformal3'], function(conformal3)
 {
   return function(x, y, z, o, i)
   {
-    return new Conformal3(0, x, y, z, o, i);
+    return conformal3(0, x, y, z, o, i);
   };
 });

@@ -122,6 +122,7 @@ function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
 
       var vertexPositionAttribute = gl.getAttribLocation(program, "aVertexPosition");
       gl.enableVertexAttribArray(vertexPositionAttribute);
+
       gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
       gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
 
