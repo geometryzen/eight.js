@@ -20,8 +20,10 @@ function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
     var vbi = null;
     var vbc = null;
     var mvMatrixUniform = null;
+    var normalMatrixUniform = null;
     var pMatrixUniform = null;
     var mvMatrix = mat4.create();
+    var normalMatrix = mat3.create();
     var angle = 0;
     geometry = geometry || geometryConstructor();
     material = material || meshBasicMaterial({'color': Math.random() * 0xffffff});
@@ -79,6 +81,7 @@ function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
       gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(geometry.vertexIndices), gl.STATIC_DRAW);
 
       mvMatrixUniform = gl.getUniformLocation(program, "uMVMatrix");
+      normalMatrixUniform = gl.getUniformLocation(program, "uNormalMatrix");
       pMatrixUniform  = gl.getUniformLocation(program, "uPMatrix");
     };
 
@@ -107,6 +110,8 @@ function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
       mat4.translate(mvMatrix, mvMatrix, [-1.0, -1.0, -7.0]);
       mat4.rotate(mvMatrix, mvMatrix, angle, [0.0, 1.0, 0.0]);
       angle += 0.01;
+
+      mat3.normalFromMat4(normalMatrix, mvMatrix);
     };
 
     that.draw = function(projectionMatrix)
@@ -114,6 +119,7 @@ function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
       gl.useProgram(program);
 
       gl.uniformMatrix4fv(mvMatrixUniform, false, mvMatrix);
+      gl.uniformMatrix3fv(normalMatrixUniform, false, normalMatrix);
       gl.uniformMatrix4fv(pMatrixUniform, false, projectionMatrix);
 
       var vertexPositionAttribute = gl.getAttribLocation(program, "aVertexPosition");

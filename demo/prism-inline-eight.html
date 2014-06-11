@@ -3,7 +3,7 @@
   <head>
     <title>EIGHT Demo</title>
     <!-- Don't use webgl-debug.js outside of development. -->
-    <!--script src="../manual-deps/khronos/webgl-debug.js"></script-->
+    <script src="../manual-deps/khronos/webgl-debug.js"></script>
     <script src="../vendor/gl-matrix/dist/gl-matrix.js"></script>
     <script src="../dist/eight.js"></script>
     <script src="../vendor/stats.js/build/stats.min.js"></script>
@@ -14,8 +14,8 @@
         if (typeof WebGLDebugUtils !== 'undefined')
         {
           canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas(canvas);
-          canvas.loseContextInNCalls(1000);
-          canvas.setRestoreTimeout(3000);
+          //canvas.loseContextInNCalls(1000);
+          //canvas.setRestoreTimeout(3000);
         }
         var scene = EIGHT.scene();
         var renderer = EIGHT.webGLRenderer();
@@ -75,7 +75,7 @@
         {
           var logGLCall = function(functionName, args)
           {
-             console.log("gl." + functionName + "(" + WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")");
+             console.log(functionName + "(" + WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")");
           }
           function validateNoneOfTheArgsAreUndefined(functionName, args)
           {
@@ -83,13 +83,14 @@
             {
               if (args[ii] === undefined)
               {
-                console.error("undefined passed to gl." + functionName + "(" + WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")");
+                var argString = WebGLDebugUtils.glFunctionArgsToString(functionName, args);
+                console.error("undefined passed to " + functionName + "(" + argString + ")");
               }
             }
           }
           function onGLCall(functionName, args)
           {
-             logGLCall(functionName, args);
+//           logGLCall(functionName, args);
              validateNoneOfTheArgsAreUndefined(functionName, args);
           }
           gl = WebGLDebugUtils.makeDebugContext(gl, undefined, onGLCall);
