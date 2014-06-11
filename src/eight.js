@@ -16,7 +16,10 @@ define(function(require) {
   eight.conformal3 = require('eight/math/c3ga/conformal3');
   eight.scalarC3   = require('eight/math/c3ga/scalarC3');
   eight.vectorC3   = require('eight/math/c3ga/vectorC3');
+
+  eight.boxGeometry = require('eight/geometries/boxGeometry');
   eight.prismGeometry = require('eight/geometries/prismGeometry');
+
   eight.meshBasicMaterial = require('eight/materials/meshBasicMaterial');
   eight.meshNormalMaterial = require('eight/materials/meshNormalMaterial');
   return eight;

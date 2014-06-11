@@ -840,9 +840,9 @@ function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
     that.move = function()
     {
       mat4.identity(mvMatrix);
-      mat4.translate(mvMatrix, mvMatrix, [-1.0, -1.0, -7.0]);
+      mat4.translate(mvMatrix, mvMatrix, [0.0, 0.0, -5.0]);
       mat4.rotate(mvMatrix, mvMatrix, angle, [0.0, 1.0, 0.0]);
-      angle += 0.01;
+      angle += 0.05;
 
       mat3.normalFromMat4(normalMatrix, mvMatrix);
     };
@@ -1073,6 +1073,88 @@ define('eight/math/c3ga/vectorC3',['eight/math/c3ga/conformal3'], function(confo
     return conformal3(0, x, y, z, o, i);
   };
 });
+define('eight/geometries/boxGeometry',['eight/core/geometry','eight/math/e3ga/vectorE3'], function(geometry, vectorE3)
+{
+  var vertexList =
+  [
+    // front face
+    vectorE3(-0.5, -0.5, +0.5),
+    vectorE3(+0.5, -0.5, +0.5),
+    vectorE3(+0.5, +0.5, +0.5),
+    vectorE3(-0.5, +0.5, +0.5),
+
+    // rear face
+    vectorE3(-0.5, -0.5, -0.5),
+    vectorE3(+0.5, -0.5, -0.5),
+    vectorE3(+0.5, +0.5, -0.5),
+    vectorE3(-0.5, +0.5, -0.5)
+  ];
+
+  var triangles =
+  [
+    // front
+    [0,1,2],
+    [0,2,3],
+    // rear
+    [4,7,5],
+    [5,7,6],
+    // left
+    [0,7,4],
+    [0,3,7],
+    // right
+    [1,5,2],
+    [2,5,6],
+    // top
+    [2,7,3],
+    [2,6,7],
+    // bottom
+    [0,5,1],
+    [0,4,5]
+  ];
+
+  var boxGeometry = function(spec, my)
+  {
+    my = my || {};
+
+    var api = geometry(spec, my);
+
+    api.triangles = triangles;
+    api.vertices = [];
+    api.normals = [];
+    api.colors = [];
+
+    for(var t=0;t<triangles.length;t++)
+    {
+      var triangle = triangles[t];
+
+      // Normals will be the same for each vertex of a triangle.
+      var v0 = vertexList[triangle[0]];
+      var v1 = vertexList[triangle[1]];
+      var v2 = vertexList[triangle[2]];
+
+      var perp = v1.sub(v0).cross(v2.sub(v0));
+      var normal = perp.div(perp.norm());
+
+      for(var j=0;j<3;j++)
+      {
+        api.vertices.push(vertexList[triangle[j]].x);
+        api.vertices.push(vertexList[triangle[j]].y);
+        api.vertices.push(vertexList[triangle[j]].z);
+
+        api.normals.push(normal.x);
+        api.normals.push(normal.y);
+        api.normals.push(normal.z);
+
+        api.colors.push(0.0);
+        api.colors.push(0.0);
+        api.colors.push(1.0);
+      }
+    }
+    return api;
+  };
+
+  return boxGeometry;
+});
 define('eight/geometries/prismGeometry',['eight/core/geometry','eight/math/e3ga/vectorE3'], function(geometry, vectorE3)
 {
   // The numbering of the front face, seen from the front is
@@ -1136,7 +1218,7 @@ define('eight/geometries/prismGeometry',['eight/core/geometry','eight/math/e3ga/
     [0,8,2]
   ];
 
-  var constructor = function(spec, my)
+  var prismGeometry = function(spec, my)
   {
     my = my || {};
 
@@ -1177,7 +1259,7 @@ define('eight/geometries/prismGeometry',['eight/core/geometry','eight/math/e3ga/
     return api;
   };
 
-  return constructor;
+  return prismGeometry;
 });
 define('eight/materials/meshNormalMaterial',['eight/core/material'], function(material)
 {
@@ -1192,7 +1274,7 @@ define('eight/materials/meshNormalMaterial',['eight/core/material'], function(ma
 
   return constructor;
 });
-define('eight',['require','eight/core','eight/core/object3D','eight/core/geometry','eight/core/material','eight/cameras/camera','eight/cameras/perspectiveCamera','eight/renderers/webGLRenderer','eight/scenes/scene','eight/objects/mesh','eight/utils/windowAnimationRunner','eight/utils/webGLContextMonitor','eight/math/e3ga/euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/c3ga/conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/prismGeometry','eight/materials/meshBasicMaterial','eight/materials/meshNormalMaterial'],function(require) {
+define('eight',['require','eight/core','eight/core/object3D','eight/core/geometry','eight/core/material','eight/cameras/camera','eight/cameras/perspectiveCamera','eight/renderers/webGLRenderer','eight/scenes/scene','eight/objects/mesh','eight/utils/windowAnimationRunner','eight/utils/webGLContextMonitor','eight/math/e3ga/euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/c3ga/conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/boxGeometry','eight/geometries/prismGeometry','eight/materials/meshBasicMaterial','eight/materials/meshNormalMaterial'],function(require) {
   var eight = require('eight/core');
   eight.object3D = require('eight/core/object3D');
   eight.geometry = require('eight/core/geometry');
@@ -1210,7 +1292,10 @@ define('eight',['require','eight/core','eight/core/object3D','eight/core/geometr
   eight.conformal3 = require('eight/math/c3ga/conformal3');
   eight.scalarC3   = require('eight/math/c3ga/scalarC3');
   eight.vectorC3   = require('eight/math/c3ga/vectorC3');
+
+  eight.boxGeometry = require('eight/geometries/boxGeometry');
   eight.prismGeometry = require('eight/geometries/prismGeometry');
+
   eight.meshBasicMaterial = require('eight/materials/meshBasicMaterial');
   eight.meshNormalMaterial = require('eight/materials/meshNormalMaterial');
   return eight;

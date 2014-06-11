@@ -61,7 +61,7 @@ define(['eight/core/geometry','eight/math/e3ga/vectorE3'], function(geometry, ve
     [0,8,2]
   ];
 
-  var constructor = function(spec, my)
+  var prismGeometry = function(spec, my)
   {
     my = my || {};
 
@@ -102,5 +102,5 @@ define(['eight/core/geometry','eight/math/e3ga/vectorE3'], function(geometry, ve
     return api;
   };
 
-  return constructor;
+  return prismGeometry;
 });
