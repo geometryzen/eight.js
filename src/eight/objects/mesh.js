@@ -105,8 +105,9 @@ function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
     that.move = function()
     {
       mat4.identity(mvMatrix);
-      mat4.translate(mvMatrix, mvMatrix, [0.0, 0.0, -5.0]);
+      mat4.translate(mvMatrix, mvMatrix, [0.0, 0.0, -3.0]);
       mat4.rotate(mvMatrix, mvMatrix, angle, [0.0, 1.0, 0.0]);
+      mat4.rotate(mvMatrix, mvMatrix, angle, [1.0, 0.0, 0.0]);
       angle += 0.05;
 
       mat3.normalFromMat4(normalMatrix, mvMatrix);
