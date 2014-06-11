@@ -1,5 +1,7 @@
 define(function() {
-  var source = [
+  // TODO: Instead of simply returning a string, we could return a parameterized code-generating function?
+  var source =
+  [
     "attribute vec3 aVertexPosition;",
     "attribute vec3 aVertexColor;",
     "attribute vec3 aVertexNormal;",
@@ -19,10 +21,10 @@ define(function() {
       "vec3 ambientLight = vec3(0.1, 0.1, 0.1);",
 
       "vec3 diffuseLightColor = vec3(0.5, 0.5, 0.5);",
-      "vec3 directionalLightPosition = normalize(vec3(10.0, 10.0, 5.0));",
+      "vec3 L = normalize(vec3(10.0, 10.0, 5.0));",
 
-      "vec3 transformedNormal = uNormalMatrix * aVertexNormal;",
-      "float diffuseLightAmount = max(dot(transformedNormal, directionalLightPosition),0.0);",
+      "vec3 N = normalize(uNormalMatrix * aVertexNormal);",
+      "float diffuseLightAmount = max(dot(N, L), 0.0);",
 
       "vLight = ambientLight + (diffuseLightAmount * diffuseLightColor);",
     "}"

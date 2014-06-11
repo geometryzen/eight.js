@@ -1,7 +1,7 @@
-define(['eight/math/e3ga/Euclidean3'], function(Euclidean3)
+define(['eight/math/e3ga/euclidean3'], function(euclidean3)
 {
   return function(x, y, z)
   {
-    return new Euclidean3(0, x, y, z, 0, 0, 0, 0);
+    return euclidean3(0, x, y, z, 0, 0, 0, 0);
   };
 });

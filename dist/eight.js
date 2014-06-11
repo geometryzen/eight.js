@@ -682,7 +682,9 @@ define('eight/materials/meshBasicMaterial',['eight/core/material'], function(mat
   return constructor;
 });
 define('eight/shaders/shader-vs',[],function() {
-  var source = [
+  // TODO: Instead of simply returning a string, we could return a parameterized code-generating function?
+  var source =
+  [
     "attribute vec3 aVertexPosition;",
     "attribute vec3 aVertexColor;",
     "attribute vec3 aVertexNormal;",
@@ -702,10 +704,10 @@ define('eight/shaders/shader-vs',[],function() {
       "vec3 ambientLight = vec3(0.1, 0.1, 0.1);",
 
       "vec3 diffuseLightColor = vec3(0.5, 0.5, 0.5);",
-      "vec3 directionalLightPosition = normalize(vec3(10.0, 10.0, 5.0));",
+      "vec3 L = normalize(vec3(10.0, 10.0, 5.0));",
 
-      "vec3 transformedNormal = uNormalMatrix * aVertexNormal;",
-      "float diffuseLightAmount = max(dot(transformedNormal, directionalLightPosition),0.0);",
+      "vec3 N = normalize(uNormalMatrix * aVertexNormal);",
+      "float diffuseLightAmount = max(dot(N, L), 0.0);",
 
       "vLight = ambientLight + (diffuseLightAmount * diffuseLightColor);",
     "}"
@@ -998,35 +1000,54 @@ define('eight/utils/webGLContextMonitor',[],function()
 
   return constructor;
 });
-define('eight/math/e3ga/Euclidean3',[],function() {
-
-  var Euclidean3 = function(w, x, y, z, xy, yz, zx, xyz)
+define('eight/math/e3ga/euclidean3',[],function()
+{
+  var euclidean3 = function(w, x, y, z, xy, yz, zx, xyz)
   {
-    this.w   = w;
-    this.x   = x;
-    this.y   = y;
-    this.z   = z;
-    this.xy  = xy;
-    this.yz  = yz;
-    this.zx  = zx;
-    this.xyz = xyz;
+    var api =
+    {
+      w: w,
+      x: x,
+      y: y,
+      z: z,
+      xy: xy,
+      yz: yz,
+      zx: zx,
+      xyz: xyz,
+      cross: function(mv)
+      {
+        return euclidean3(0, y*mv.z-z*mv.y, z*mv.x-x*mv.z, x*mv.y-y*mv.x, 0, 0, 0, 0);
+      },
+      div: function(mv)
+      {
+        return euclidean3(w/mv.w, x/mv.w, y/mv.w, z/mv.w, 0, 0, 0, 0);
+      },
+      norm: function()
+      {
+        return euclidean3(Math.sqrt(x*x+y*y+z*z), 0, 0, 0, 0, 0, 0, 0);
+      },
+      sub: function(mv)
+      {
+        return euclidean3(w-mv.w, x-mv.x, y-mv.y, z-mv.z, xy-mv.xy, yz-mv.yz, zx-mv.zx, xyz-mv.xyz);
+      }
+    };
+    return api;
   };
 
-  return Euclidean3;
-
+  return euclidean3;
 });
-define('eight/math/e3ga/scalarE3',['eight/math/e3ga/Euclidean3'], function(Euclidean3)
+define('eight/math/e3ga/scalarE3',['eight/math/e3ga/euclidean3'], function(euclidean3)
 {
   return function(w)
   {
-    return new Euclidean3(w, 0, 0, 0, 0, 0, 0, 0);
+    return euclidean3(w, 0, 0, 0, 0, 0, 0, 0);
   };
 });
-define('eight/math/e3ga/vectorE3',['eight/math/e3ga/Euclidean3'], function(Euclidean3)
+define('eight/math/e3ga/vectorE3',['eight/math/e3ga/euclidean3'], function(euclidean3)
 {
   return function(x, y, z)
   {
-    return new Euclidean3(0, x, y, z, 0, 0, 0, 0);
+    return euclidean3(0, x, y, z, 0, 0, 0, 0);
   };
 });
 define('eight/math/c3ga/scalarC3',['eight/math/c3ga/Conformal3'], function(Conformal3)
@@ -1126,10 +1147,8 @@ define('eight/geometries/prismGeometry',['eight/core/geometry','eight/math/e3ga/
       var v1 = vertexList[triangle[1]];
       var v2 = vertexList[triangle[2]];
 
-      var a = vectorE3(v1.x-v0.x, v1.y-v0.y, v1.z-v0.z);
-      var b = vectorE3(v2.x-v0.x, v2.y-v0.y, v2.z-v0.z);
-
-      var normal = vectorE3(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);
+      var perp = v1.sub(v0).cross(v2.sub(v0));
+      var normal = perp.div(perp.norm());
 
       for(var j=0;j<3;j++)
       {
@@ -1164,7 +1183,7 @@ define('eight/materials/meshNormalMaterial',['eight/core/material'], function(ma
 
   return constructor;
 });
-define('eight',['require','eight/core','eight/core/object3D','eight/core/geometry','eight/core/material','eight/cameras/camera','eight/cameras/perspectiveCamera','eight/renderers/webGLRenderer','eight/scenes/scene','eight/objects/mesh','eight/utils/windowAnimationRunner','eight/utils/webGLContextMonitor','eight/math/e3ga/Euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/c3ga/Conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/prismGeometry','eight/materials/meshBasicMaterial','eight/materials/meshNormalMaterial'],function(require) {
+define('eight',['require','eight/core','eight/core/object3D','eight/core/geometry','eight/core/material','eight/cameras/camera','eight/cameras/perspectiveCamera','eight/renderers/webGLRenderer','eight/scenes/scene','eight/objects/mesh','eight/utils/windowAnimationRunner','eight/utils/webGLContextMonitor','eight/math/e3ga/euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/c3ga/Conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/prismGeometry','eight/materials/meshBasicMaterial','eight/materials/meshNormalMaterial'],function(require) {
   var eight = require('eight/core');
   eight.object3D = require('eight/core/object3D');
   eight.geometry = require('eight/core/geometry');
@@ -1176,7 +1195,7 @@ define('eight',['require','eight/core','eight/core/object3D','eight/core/geometr
   eight.mesh  = require('eight/objects/mesh');
   eight.windowAnimationRunner = require('eight/utils/windowAnimationRunner');
   eight.webGLContextMonitor = require('eight/utils/webGLContextMonitor');
-  eight.Euclidean3 = require('eight/math/e3ga/Euclidean3');
+  eight.euclidean3 = require('eight/math/e3ga/euclidean3');
   eight.scalarE3   = require('eight/math/e3ga/scalarE3');
   eight.vectorE3   = require('eight/math/e3ga/vectorE3');
   eight.Conformal3 = require('eight/math/c3ga/Conformal3');

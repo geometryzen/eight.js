@@ -81,10 +81,8 @@ define(['eight/core/geometry','eight/math/e3ga/vectorE3'], function(geometry, ve
       var v1 = vertexList[triangle[1]];
       var v2 = vertexList[triangle[2]];
 
-      var a = vectorE3(v1.x-v0.x, v1.y-v0.y, v1.z-v0.z);
-      var b = vectorE3(v2.x-v0.x, v2.y-v0.y, v2.z-v0.z);
-
-      var normal = vectorE3(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);
+      var perp = v1.sub(v0).cross(v2.sub(v0));
+      var normal = perp.div(perp.norm());
 
       for(var j=0;j<3;j++)
       {
