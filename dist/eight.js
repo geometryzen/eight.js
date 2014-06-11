@@ -693,13 +693,21 @@ define('eight/shaders/shader-vs',[],function() {
 
     "varying highp vec4 vColor;",
     "varying highp vec3 vLight;",
+
     "void main(void)",
     "{",
       "gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);",
       "vColor = vec4(aVertexColor, 1.0);",
-      "",
+
       "vec3 ambientLight = vec3(0.1, 0.1, 0.1);",
-      "vLight = ambientLight;",
+
+      "vec3 diffuseLightColor = vec3(0.5, 0.5, 0.5);",
+      "vec3 directionalLightPosition = normalize(vec3(10.0, 10.0, 5.0));",
+
+      "vec3 transformedNormal = uNormalMatrix * aVertexNormal;",
+      "float diffuseLightAmount = max(dot(transformedNormal, directionalLightPosition),0.0);",
+
+      "vLight = ambientLight + (diffuseLightAmount * diffuseLightColor);",
     "}"
   ].join('\n');
   return source;
@@ -711,7 +719,6 @@ define('eight/shaders/shader-fs',[],function() {
     "void main(void)",
     "{",
       "gl_FragColor = vec4(vColor.xyz * vLight, vColor.a);",
-      "gl_FragColor = vColor;",
     "}"
   ].join('\n');
   return source;
@@ -735,7 +742,7 @@ function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
     var fs = null;
     var program = null;
     var vbo = null;
-    var vbi = null;
+    var vbn = null;
     var vbc = null;
     var mvMatrixUniform = null;
     var normalMatrixUniform = null;
@@ -745,8 +752,6 @@ function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
     var angle = 0;
     geometry = geometry || geometryConstructor();
     material = material || meshBasicMaterial({'color': Math.random() * 0xffffff});
-
-    // Add shared variables and functions to my.
 
     that = object3D({});
 
@@ -786,17 +791,17 @@ function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
         alert("Error linking program:\n" + infoLog);
       }
 
-      vbc = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, vbc);
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geometry.colors), gl.STATIC_DRAW);
-
       vbo = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geometry.vertices), gl.STATIC_DRAW);
 
-      vbi = gl.createBuffer();
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vbi);
-      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(geometry.vertexIndices), gl.STATIC_DRAW);
+      vbn = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbn);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geometry.normals), gl.STATIC_DRAW);
+
+      vbc = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbc);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geometry.colors), gl.STATIC_DRAW);
 
       mvMatrixUniform = gl.getUniformLocation(program, "uMVMatrix");
       normalMatrixUniform = gl.getUniformLocation(program, "uNormalMatrix");
@@ -810,7 +815,7 @@ function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
       program = null;
       vbc = null;
       vbo = null;
-      vbi = null;
+      vbn = null;
       mvMatrixUniform = null;
       pMatrixUniform = null;
     };
@@ -845,14 +850,17 @@ function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
       gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
       gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
 
+      var vertexNormalAttribute = gl.getAttribLocation(program, "aVertexNormal");
+      gl.enableVertexAttribArray(vertexNormalAttribute);
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbn);
+      gl.vertexAttribPointer(vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
+
       var vertexColorAttribute = gl.getAttribLocation(program, "aVertexColor");
       gl.enableVertexAttribArray(vertexColorAttribute);
       gl.bindBuffer(gl.ARRAY_BUFFER, vbc);
       gl.vertexAttribPointer(vertexColorAttribute, 3, gl.FLOAT, false, 0, 0);
 
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vbi);
-      var mode = geometry.primitiveMode(gl);
-      gl.drawElements(mode, geometry.vertexIndices.length, gl.UNSIGNED_SHORT, 0);
+      gl.drawArrays(gl.TRIANGLES, 0, geometry.triangles.length * 3);
     };
 
     return that;
@@ -1035,7 +1043,7 @@ define('eight/math/c3ga/vectorC3',['eight/math/c3ga/Conformal3'], function(Confo
     return new Conformal3(0, x, y, z, o, i);
   };
 });
-define('eight/geometries/prismGeometry',['eight/core/geometry'], function(geometry)
+define('eight/geometries/prismGeometry',['eight/core/geometry','eight/math/e3ga/vectorE3'], function(geometry, vectorE3)
 {
   // The numbering of the front face, seen from the front is
   //   5
@@ -1046,23 +1054,23 @@ define('eight/geometries/prismGeometry',['eight/core/geometry'], function(geomet
   //  9 A
   // 6 7 8 
   // There are 12 vertices in total.
-  var vertices =
+  var vertexList =
   [
     // front face
-    0.0, 0.0, 0.0,  // 0
-    1.0, 0.0, 0.0,  // 1
-    2.0, 0.0, 0.0,  // 2
-    0.5, 1.0, 0.0,  // 3
-    1.5, 1.0, 0.0,  // 4
-    1.0, 2.0, 0.0,  // 5
+    vectorE3(0.0, 0.0, 0.0),
+    vectorE3(1.0, 0.0, 0.0),
+    vectorE3(2.0, 0.0, 0.0),
+    vectorE3(0.5, 1.0, 0.0),
+    vectorE3(1.5, 1.0, 0.0),
+    vectorE3(1.0, 2.0, 0.0),
 
     // rear face
-    0.0, 0.0, -2.0, // 6
-    1.0, 0.0, -2.0, // 7
-    2.0, 0.0, -2.0, // 8
-    0.5, 1.0, -2.0, // 9
-    1.5, 1.0, -2.0, // A=10
-    1.0, 2.0, -2.0, // B=11
+    vectorE3(0.0, 0.0, -2.0),
+    vectorE3(1.0, 0.0, -2.0),
+    vectorE3(2.0, 0.0, -2.0),
+    vectorE3(0.5, 1.0, -2.0),
+    vectorE3(1.5, 1.0, -2.0),
+    vectorE3(1.0, 2.0, -2.0),
   ];
 
   // I'm not sure why the left and right side have 4 faces, but the botton only 2.
@@ -1071,50 +1079,31 @@ define('eight/geometries/prismGeometry',['eight/core/geometry'], function(geomet
   var triangles =
   [
     //front face
-    0,1,3,
-    1,3,4,  // clockwise
-    1,2,4,
-    3,4,5,
+    [0,1,3],
+    [1,4,3],
+    [1,2,4],
+    [3,4,5],
     
     //rear face
-    6,7,9,  // clockwise
-    7,9,10,
-    7,8,10, // clockwise
-    9,10,11, // clockwise
+    [6,9,7],
+    [7,9,10],
+    [7,10,8],
+    [9,11,10],
     
     //left side
-    0,3,6,
-    3,6,9,  // clockwise
-    3,5,9,
-    5,9,11, // clockwise
+    [0,3,6],
+    [3,9,6],
+    [3,5,9],
+    [5,11,9],
     
     //right side
-    2,4,8, // clockwise
-    4,8,10,
-    4,5,10, // clockwise
-    5,10,11,
+    [2,8,4],
+    [4,8,10],
+    [4,10,5],
+    [5,10,11],
     //bottom faces
-    0,6,8,
-    8,2,0
-  ];
-
-  var colors =
-  [
-    //front face  
-     0.0, 0.0, 1.0,
-     1.0, 1.0, 1.0,
-     0.0, 0.0, 1.0,
-     0.0, 0.0, 1.0,
-     0.0, 0.0, 1.0,
-     1.0, 1.0, 1.0,
-  
-    //rear face
-     0.0, 1.0, 1.0,
-     1.0, 1.0, 1.0,
-     0.0, 1.0, 1.0,
-     0.0, 1.0, 1.0,
-     0.0, 1.0, 1.0,
-     1.0, 1.0, 1.0
+    [0,6,8],
+    [0,8,2]
   ];
 
   var constructor = function(spec, my)
@@ -1123,10 +1112,40 @@ define('eight/geometries/prismGeometry',['eight/core/geometry'], function(geomet
 
     var api = geometry(spec, my);
 
-    api.vertices = vertices;
-    api.vertexIndices = triangles;
-    api.colors = colors;
+    api.triangles = triangles;
+    api.vertices = [];
+    api.normals = [];
+    api.colors = [];
 
+    for(var t=0;t<triangles.length;t++)
+    {
+      var triangle = triangles[t];
+
+      // Normals will be the same for each vertex of a triangle.
+      var v0 = vertexList[triangle[0]];
+      var v1 = vertexList[triangle[1]];
+      var v2 = vertexList[triangle[2]];
+
+      var a = vectorE3(v1.x-v0.x, v1.y-v0.y, v1.z-v0.z);
+      var b = vectorE3(v2.x-v0.x, v2.y-v0.y, v2.z-v0.z);
+
+      var normal = vectorE3(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);
+
+      for(var j=0;j<3;j++)
+      {
+        api.vertices.push(vertexList[triangle[j]].x);
+        api.vertices.push(vertexList[triangle[j]].y);
+        api.vertices.push(vertexList[triangle[j]].z);
+
+        api.normals.push(normal.x);
+        api.normals.push(normal.y);
+        api.normals.push(normal.z);
+
+        api.colors.push(1.0);
+        api.colors.push(0.0);
+        api.colors.push(0.0);
+      }
+    }
     return api;
   };
 
