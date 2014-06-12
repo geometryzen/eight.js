@@ -119,31 +119,34 @@ function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
 
     that.draw = function(projectionMatrix)
     {
-      gl.useProgram(program);
+      if (gl)
+      {
+        gl.useProgram(program);
 
-      that.updateMatrix();
+        that.updateMatrix();
 
-      gl.uniformMatrix4fv(mvMatrixUniform, false, mvMatrix);
-      gl.uniformMatrix3fv(normalMatrixUniform, false, normalMatrix);
-      gl.uniformMatrix4fv(pMatrixUniform, false, projectionMatrix);
+        gl.uniformMatrix4fv(mvMatrixUniform, false, mvMatrix);
+        gl.uniformMatrix3fv(normalMatrixUniform, false, normalMatrix);
+        gl.uniformMatrix4fv(pMatrixUniform, false, projectionMatrix);
 
-      var vertexPositionAttribute = gl.getAttribLocation(program, "aVertexPosition");
-      gl.enableVertexAttribArray(vertexPositionAttribute);
+        var vertexPositionAttribute = gl.getAttribLocation(program, "aVertexPosition");
+        gl.enableVertexAttribArray(vertexPositionAttribute);
 
-      gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-      gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+        gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
 
-      var vertexNormalAttribute = gl.getAttribLocation(program, "aVertexNormal");
-      gl.enableVertexAttribArray(vertexNormalAttribute);
-      gl.bindBuffer(gl.ARRAY_BUFFER, vbn);
-      gl.vertexAttribPointer(vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
+        var vertexNormalAttribute = gl.getAttribLocation(program, "aVertexNormal");
+        gl.enableVertexAttribArray(vertexNormalAttribute);
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbn);
+        gl.vertexAttribPointer(vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
 
-      var vertexColorAttribute = gl.getAttribLocation(program, "aVertexColor");
-      gl.enableVertexAttribArray(vertexColorAttribute);
-      gl.bindBuffer(gl.ARRAY_BUFFER, vbc);
-      gl.vertexAttribPointer(vertexColorAttribute, 3, gl.FLOAT, false, 0, 0);
+        var vertexColorAttribute = gl.getAttribLocation(program, "aVertexColor");
+        gl.enableVertexAttribArray(vertexColorAttribute);
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbc);
+        gl.vertexAttribPointer(vertexColorAttribute, 3, gl.FLOAT, false, 0, 0);
 
-      gl.drawArrays(gl.TRIANGLES, 0, geometry.triangles.length * 3);
+        gl.drawArrays(gl.TRIANGLES, 0, geometry.triangles.length * 3);
+      }
     };
 
     return that;

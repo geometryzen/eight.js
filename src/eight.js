@@ -31,5 +31,6 @@ define(function(require)
 
   eight.meshBasicMaterial = require('eight/materials/meshBasicMaterial');
   eight.meshNormalMaterial = require('eight/materials/meshNormalMaterial');
+
   return eight;
 });

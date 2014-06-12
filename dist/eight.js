@@ -426,7 +426,7 @@ define("../vendor/almond/almond", function(){});
 
 define('eight/core',[],function() {
   var eight = {
-    VERSION: '0.0.1'
+    VERSION: '0.0.2'
   };
 
   return eight;
@@ -647,27 +647,86 @@ define('eight/cameras/camera',['eight/core/object3D'], function(object3D)
 });
 define('eight/cameras/perspectiveCamera',['eight/cameras/camera'], function(camera)
 {
-  var constructor = function(fov, aspect, near, far)
+  var perspectiveCamera = function(fov, aspect, near, far)
   {
-    var api = camera({});
+    fov = fov !== undefined ? fov : 50;
+    aspect = aspect !== undefined ? aspect : 1;
+    near = near !== undefined ? near : 0.1;
+    far = far !== undefined ? far : 2000;
 
-    api.fov = fov !== undefined ? fov : 50;
-    api.aspect = aspect !== undefined ? aspect : 1;
-    api.near = near !== undefined ? near : 0.1;
-    api.far = far !== undefined ? far : 2000;
+    var that = camera({});
 
-    mat4.perspective(api.projectionMatrix, api.fov, api.aspect, api.near, api.far);
+    var updateProjectionMatrix = function()
+    {
+      mat4.perspective(that.projectionMatrix, fov, aspect, near, far);
+    };
 
-    return api;
+    Object.defineProperty(that, 'aspect', {
+      get: function() {return aspect;},
+      set: function(value) {aspect=value;}
+    });
+
+    that.updateProjectionMatrix = updateProjectionMatrix;
+
+    that.updateProjectionMatrix();
+
+    return that;
   };
 
-  return constructor;
+  return perspectiveCamera;
 });
-define('eight/renderers/webGLRenderer',[],function()
+define('eight/renderers/webGLRenderer',['eight/core'], function(eight)
 {
-  var constructor = function()
+  var webGLRenderer = function(parameters)
   {
+    console.log('EIGHT.webGLRenderer', eight.VERSION);
+
+    parameters = parameters || {};
+
+    var canvas = parameters.canvas !== undefined ? parameters.canvas : document.createElement('canvas');
+    var alpha = parameters.alpha !== undefined ? parameters.alpha : false;
+    var depth = parameters.depth !== undefined ? parameters.depth : true;
+    var stencil = parameters.stencil !== undefined ? parameters.stencil : true;
+    var antialias = parameters.antialias !== undefined ? parameters.antialias : false;
+    var premultipliedAlpha = parameters.premultipliedAlpha !== undefined ? parameters.premultipliedAlpha : true;
+    var preserveDrawingBuffer = parameters.preserveDrawingBuffer !== undefined ? parameters.preserveDrawingBuffer : false;
+
     var gl;
+
+    var setViewport = function(x, y, width, height)
+    {
+      if (gl)
+      {
+        gl.viewport(x, y, width, height);
+      }
+    };
+
+    function initGL()
+    {
+      try
+      {
+        var attributes =
+        {
+          'alpha': alpha,
+          'depth': depth,
+          'stencil': stencil,
+          'antialias': antialias,
+          'premultipliedAlpha': premultipliedAlpha,
+          'preserveDrawingBuffer': preserveDrawingBuffer
+        };
+
+        gl = canvas.getContext('webgl', attributes) || canvas.getContext('experimental-webgl', attributes);
+
+        if (gl === null)
+        {
+          throw 'Error creating WebGL context.';
+        }
+      }
+      catch (e)
+      {
+        console.error(e);
+      }
+    }
 
     var that =
     {
@@ -682,28 +741,58 @@ define('eight/renderers/webGLRenderer',[],function()
       },
       clearColor: function(r, g, b, a)
       {
-        gl.clearColor(r, g, b, a);
+        if (gl)
+        {
+          gl.clearColor(r, g, b, a);
+        }
       },
       render: function(scene, camera)
       {
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-        var children = scene.children;
-        for(var i = 0, length = children.length; i < length; i++)
+        if (gl)
         {
-          children[i].draw(camera.projectionMatrix);
+          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+          var children = scene.children;
+          for(var i = 0, length = children.length; i < length; i++)
+          {
+            children[i].draw(camera.projectionMatrix);
+          }
         }
       },
       viewport: function(x, y, width, height)
       {
-        gl.viewport(x, y, width, height);
+        if (gl)
+        {
+          gl.viewport(x, y, width, height);
+        }
+      },
+      setSize: function(width, height, updateStyle)
+      {
+        canvas.width = width;// * devicePixelRatio;
+        canvas.height = height;// * devicePixelRatio;
+
+        if (updateStyle !== false)
+        {
+          canvas.style.width = width + 'px';
+          canvas.style.height = height + 'px';
+        }
+
+        setViewport(0, 0, width, height);
       }
     };
+    Object.defineProperty(that, 'canvas', {
+      get: function() {return canvas;}
+    });
+    Object.defineProperty(that, 'context', {
+      get: function() {return gl;}
+    });
+
+    initGL();
 
     return that;
   };
 
-  return constructor;
+  return webGLRenderer;
 });
 define('eight/scenes/scene',['eight/core/object3D'], function(object3D)
 {
@@ -932,31 +1021,34 @@ function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
 
     that.draw = function(projectionMatrix)
     {
-      gl.useProgram(program);
+      if (gl)
+      {
+        gl.useProgram(program);
 
-      that.updateMatrix();
+        that.updateMatrix();
 
-      gl.uniformMatrix4fv(mvMatrixUniform, false, mvMatrix);
-      gl.uniformMatrix3fv(normalMatrixUniform, false, normalMatrix);
-      gl.uniformMatrix4fv(pMatrixUniform, false, projectionMatrix);
+        gl.uniformMatrix4fv(mvMatrixUniform, false, mvMatrix);
+        gl.uniformMatrix3fv(normalMatrixUniform, false, normalMatrix);
+        gl.uniformMatrix4fv(pMatrixUniform, false, projectionMatrix);
 
-      var vertexPositionAttribute = gl.getAttribLocation(program, "aVertexPosition");
-      gl.enableVertexAttribArray(vertexPositionAttribute);
+        var vertexPositionAttribute = gl.getAttribLocation(program, "aVertexPosition");
+        gl.enableVertexAttribArray(vertexPositionAttribute);
 
-      gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-      gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+        gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
 
-      var vertexNormalAttribute = gl.getAttribLocation(program, "aVertexNormal");
-      gl.enableVertexAttribArray(vertexNormalAttribute);
-      gl.bindBuffer(gl.ARRAY_BUFFER, vbn);
-      gl.vertexAttribPointer(vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
+        var vertexNormalAttribute = gl.getAttribLocation(program, "aVertexNormal");
+        gl.enableVertexAttribArray(vertexNormalAttribute);
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbn);
+        gl.vertexAttribPointer(vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
 
-      var vertexColorAttribute = gl.getAttribLocation(program, "aVertexColor");
-      gl.enableVertexAttribArray(vertexColorAttribute);
-      gl.bindBuffer(gl.ARRAY_BUFFER, vbc);
-      gl.vertexAttribPointer(vertexColorAttribute, 3, gl.FLOAT, false, 0, 0);
+        var vertexColorAttribute = gl.getAttribLocation(program, "aVertexColor");
+        gl.enableVertexAttribArray(vertexColorAttribute);
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbc);
+        gl.vertexAttribPointer(vertexColorAttribute, 3, gl.FLOAT, false, 0, 0);
 
-      gl.drawArrays(gl.TRIANGLES, 0, geometry.triangles.length * 3);
+        gl.drawArrays(gl.TRIANGLES, 0, geometry.triangles.length * 3);
+      }
     };
 
     return that;
@@ -1370,6 +1462,7 @@ define('eight',['require','eight/core','eight/core/object3D','eight/core/geometr
 
   eight.meshBasicMaterial = require('eight/materials/meshBasicMaterial');
   eight.meshNormalMaterial = require('eight/materials/meshNormalMaterial');
+
   return eight;
 });
 

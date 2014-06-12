@@ -3,7 +3,7 @@
   <head>
     <title>EIGHT Demo</title>
     <!-- Don't use webgl-debug.js outside of development. -->
-    <script src="../manual-deps/khronos/webgl-debug.js"></script>
+    <!--script src="../manual-deps/khronos/webgl-debug.js"></script-->
     <script src="../vendor/gl-matrix/dist/gl-matrix.js"></script>
     <script src="../dist/eight.js"></script>
     <script src="../vendor/stats.js/build/stats.min.js"></script>
@@ -18,7 +18,7 @@
           //canvas.setRestoreTimeout(3000);
         }
         var scene = EIGHT.scene();
-        var renderer = EIGHT.webGLRenderer();
+        var renderer = EIGHT.webGLRenderer({'canvas':canvas});
 
         var box = EIGHT.mesh(EIGHT.boxGeometry());
         box.position = EIGHT.vectorE3(-1.0,-0.5,-5);
@@ -103,7 +103,7 @@
           }
           function onGLCall(functionName, args)
           {
-//           logGLCall(functionName, args);
+             logGLCall(functionName, args);
              validateNoneOfTheArgsAreUndefined(functionName, args);
           }
           gl = WebGLDebugUtils.makeDebugContext(gl, undefined, onGLCall);
