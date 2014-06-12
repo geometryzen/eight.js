@@ -1,5 +1,5 @@
 {
-  "name": "eight",
+  "name": "eightjs",
   "version": "0.0.1",
   "main": "dist/eight.js",
   "ignore": [
@@ -13,14 +13,12 @@
     "package.json"
   ],
   "dependencies": {
+    "gl-matrix": "~2.2.1"
   },
   "devDependencies": {
     "r.js": "~2.1.14",
     "requirejs": "~2.1.14",
-    "require-cs": "~0.4.4",
     "almond": "~0.2.9",
-    "coffee-script": "~1.7.1",
-    "gl-matrix": "~2.2.1",
     "stats.js": "latest",
     "threejs": "latest"
   }

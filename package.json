@@ -1,5 +1,5 @@
 {
-  "name": "eight",
+  "name": "eightjs",
   "description": "WebGl and Geometric Algebra.",
   "version": "0.0.1",
   "homepage": "http://github.com/geometryzen/eight",
@@ -18,11 +18,10 @@
     "node": ">=0.6.0"
   },
   "keywords": [
-    "requirejs",
-    "library",
-    "boilerplate",
-    "eight",
-    "template"
+    "WebGL",
+    "geometric",
+    "algebra",
+    "eightjs"
   ],
   "dependencies": {
   },
@@ -34,7 +33,6 @@
     "grunt-contrib-requirejs": "~0.3.2",
     "grunt-jasmine-task": "*",
     "requirejs": "~2.1.0",
-    "coffee-script": "*",
     "servedir": "*"
   }
 }
