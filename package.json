@@ -1,14 +1,25 @@
 {
-  "name": "eightjs",
-  "description": "WebGl and Geometric Algebra.",
+  "name": "eight.js",
+  "description": "JavaScript 3D library using Geometric Algebra",
   "version": "0.0.1",
-  "homepage": "http://github.com/geometryzen/eight",
-  "author": "David Holmes",
+  "homepage": "https://github.com/geometryzen/eight.js",
+  "author": "David Geo Holmes",
   "licenses": [
     {
       "type": "MIT",
       "url": "http://github.com/geometryzen/eight/blob/master/LICENSE"
     }
+  ],
+  "keywords": [
+    "eight",
+    "eightjs",
+    "eight.js",
+    "3D",
+    "WebGL",
+    "geometric",
+    "algebra",
+    "physics",
+    "math"
   ],
   "repository": {
     "type": "git",
@@ -17,12 +28,6 @@
   "engines": {
     "node": ">=0.6.0"
   },
-  "keywords": [
-    "WebGL",
-    "geometric",
-    "algebra",
-    "eightjs"
-  ],
   "dependencies": {
   },
   "scripts": {
