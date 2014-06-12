@@ -2,7 +2,7 @@ define(['eight/core'], function(eight)
 {
   var webGLRenderer = function(parameters)
   {
-    console.log('EIGHT.webGLRenderer', eight.VERSION);
+    console.log('eight.js', eight.VERSION);
 
     parameters = parameters || {};
 

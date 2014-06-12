@@ -426,7 +426,7 @@ define("../vendor/almond/almond", function(){});
 
 define('eight/core',[],function() {
   var eight = {
-    VERSION: '0.0.2'
+    VERSION: '0.0.3'
   };
 
   return eight;
@@ -679,7 +679,7 @@ define('eight/renderers/webGLRenderer',['eight/core'], function(eight)
 {
   var webGLRenderer = function(parameters)
   {
-    console.log('EIGHT.webGLRenderer', eight.VERSION);
+    console.log('eight.js', eight.VERSION);
 
     parameters = parameters || {};
 
