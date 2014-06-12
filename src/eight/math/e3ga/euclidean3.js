@@ -11,12 +11,8 @@ define(function()
     zx = zx || 0;
     xyz = xyz || 0;
 
-    var Euclidean3 =
+    var that =
     {
-      w: w,
-      x: x,
-      y: y,
-      z: z,
       xy: xy,
       yz: yz,
       zx: zx,
@@ -37,12 +33,24 @@ define(function()
       {
         return euclidean3(Math.sqrt(x*x+y*y+z*z), 0, 0, 0, 0, 0, 0, 0);
       },
+      quad: function()
+      {
+        return euclidean3(x*x+y*y+z*z, 0, 0, 0, 0, 0, 0, 0);
+      },
       sub: function(mv)
       {
         return euclidean3(w-mv.w, x-mv.x, y-mv.y, z-mv.z, xy-mv.xy, yz-mv.yz, zx-mv.zx, xyz-mv.xyz);
       }
     };
-    return Euclidean3;
+    that.__defineGetter__('w', function() {return w;});
+    that.__defineSetter__('w', function(value) {w = value;});
+    that.__defineGetter__('x', function() {return x;});
+    that.__defineSetter__('x', function(value) {x = value;});
+    that.__defineGetter__('y', function() {return y;});
+    that.__defineSetter__('y', function(value) {y = value;});
+    that.__defineGetter__('z', function() {return z;});
+    that.__defineSetter__('z', function(value) {z = value;});
+    return that;
   };
 
   return euclidean3;
