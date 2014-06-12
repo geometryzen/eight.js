@@ -1,7 +1,13 @@
 define(['eight/math/c3ga/conformal3'], function(conformal3)
 {
-  return function(no, x, y, z, ni)
+  return function(xo, x1, x2, x3, xi)
   {
-    return conformal3(0, x, y, z, o, i);
+    var mv = conformal3();
+    mv.xo = xo;
+    mv.x1 = x1;
+    mv.x2 = x2;
+    mv.x3 = x3;
+    mv.xi = xi;
+    return mv;
   };
 });

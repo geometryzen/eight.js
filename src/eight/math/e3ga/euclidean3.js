@@ -42,8 +42,11 @@ define(function()
         return euclidean3(w-mv.w, x-mv.x, y-mv.y, z-mv.z, xy-mv.xy, yz-mv.yz, zx-mv.zx, xyz-mv.xyz);
       }
     };
-    that.__defineGetter__('w', function() {return w;});
-    that.__defineSetter__('w', function(value) {w = value;});
+    Object.defineProperty(that, 'w', {
+      get: function() {return w;},
+      set: function(value) {w = value;}
+    });
+    // FIXME: The following are non-standard legacy and should not be used in production.
     that.__defineGetter__('x', function() {return x;});
     that.__defineSetter__('x', function(value) {x = value;});
     that.__defineGetter__('y', function() {return y;});

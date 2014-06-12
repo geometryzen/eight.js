@@ -1,11 +1,11 @@
 define(function()
 {
-  var conformal3 = function(w, x, y, z)
+  var conformal3 = function(spec, my)
   {
-    w = w || 0;
-    x = x || 0;
-    y = y || 0;
-    z = z || 0;
+    var w = spec ? (typeof spec.w !== 'undefined' ? spec.w : 0) : 0;
+    var x = spec ? (typeof spec.x !== 'undefined' ? spec.x : 0) : 0;
+    var y = spec ? (typeof spec.y !== 'undefined' ? spec.y : 0) : 0;
+    var z = spec ? (typeof spec.z !== 'undefined' ? spec.z : 0) : 0;
 
     var that =
     {
@@ -18,8 +18,12 @@ define(function()
         return conformal3(x*x+y*y+z*z, 0, 0, 0, 0, 0, 0, 0);
       }
     };
-    that.__defineGetter__('w', function() {return w;});
-    that.__defineSetter__('w', function(value) {w = value;});
+
+    Object.defineProperty(that, 'w', {
+      get: function() {return w;},
+      set: function(value) {w = value;}
+    });
+    // FIXME: The following are non-standard legacy and should not be used in production.
     that.__defineGetter__('x', function() {return x;});
     that.__defineSetter__('x', function(value) {x = value;});
     that.__defineGetter__('y', function() {return y;});

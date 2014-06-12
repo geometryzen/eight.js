@@ -433,12 +433,12 @@ define('eight/core',[],function() {
 });
 define('eight/math/c3ga/conformal3',[],function()
 {
-  var conformal3 = function(w, x, y, z)
+  var conformal3 = function(spec, my)
   {
-    w = w || 0;
-    x = x || 0;
-    y = y || 0;
-    z = z || 0;
+    var w = spec ? (typeof spec.w !== 'undefined' ? spec.w : 0) : 0;
+    var x = spec ? (typeof spec.x !== 'undefined' ? spec.x : 0) : 0;
+    var y = spec ? (typeof spec.y !== 'undefined' ? spec.y : 0) : 0;
+    var z = spec ? (typeof spec.z !== 'undefined' ? spec.z : 0) : 0;
 
     var that =
     {
@@ -451,8 +451,12 @@ define('eight/math/c3ga/conformal3',[],function()
         return conformal3(x*x+y*y+z*z, 0, 0, 0, 0, 0, 0, 0);
       }
     };
-    that.__defineGetter__('w', function() {return w;});
-    that.__defineSetter__('w', function(value) {w = value;});
+
+    Object.defineProperty(that, 'w', {
+      get: function() {return w;},
+      set: function(value) {w = value;}
+    });
+    // FIXME: The following are non-standard legacy and should not be used in production.
     that.__defineGetter__('x', function() {return x;});
     that.__defineSetter__('x', function(value) {x = value;});
     that.__defineGetter__('y', function() {return y;});
@@ -509,8 +513,11 @@ define('eight/math/e3ga/euclidean3',[],function()
         return euclidean3(w-mv.w, x-mv.x, y-mv.y, z-mv.z, xy-mv.xy, yz-mv.yz, zx-mv.zx, xyz-mv.xyz);
       }
     };
-    that.__defineGetter__('w', function() {return w;});
-    that.__defineSetter__('w', function(value) {w = value;});
+    Object.defineProperty(that, 'w', {
+      get: function() {return w;},
+      set: function(value) {w = value;}
+    });
+    // FIXME: The following are non-standard legacy and should not be used in production.
     that.__defineGetter__('x', function() {return x;});
     that.__defineSetter__('x', function(value) {x = value;});
     that.__defineGetter__('y', function() {return y;});
@@ -1104,14 +1111,21 @@ define('eight/math/c3ga/scalarC3',['eight/math/c3ga/conformal3'], function(confo
 {
   return function(w)
   {
-    return conformal3(w);
+    var mv = conformal3({'w': w});
+    return mv;
   };
 });
 define('eight/math/c3ga/vectorC3',['eight/math/c3ga/conformal3'], function(conformal3)
 {
-  return function(no, x, y, z, ni)
+  return function(xo, x1, x2, x3, xi)
   {
-    return conformal3(0, x, y, z, o, i);
+    var mv = conformal3();
+    mv.xo = xo;
+    mv.x1 = x1;
+    mv.x2 = x2;
+    mv.x3 = x3;
+    mv.xi = xi;
+    return mv;
   };
 });
 define('eight/geometries/boxGeometry',['eight/core/geometry','eight/math/e3ga/vectorE3'], function(geometry, vectorE3)
