@@ -13,10 +13,6 @@ define(function()
 
     var that =
     {
-      xy: xy,
-      yz: yz,
-      zx: zx,
-      xyz: xyz,
       cross: function(mv)
       {
         return euclidean3(0, y*mv.z-z*mv.y, z*mv.x-x*mv.z, x*mv.y-y*mv.x, 0, 0, 0, 0);
@@ -43,16 +39,29 @@ define(function()
       }
     };
     Object.defineProperty(that, 'w', {
-      get: function() {return w;},
-      set: function(value) {w = value;}
+      get: function() {return w;}
     });
-    // FIXME: The following are non-standard legacy and should not be used in production.
-    that.__defineGetter__('x', function() {return x;});
-    that.__defineSetter__('x', function(value) {x = value;});
-    that.__defineGetter__('y', function() {return y;});
-    that.__defineSetter__('y', function(value) {y = value;});
-    that.__defineGetter__('z', function() {return z;});
-    that.__defineSetter__('z', function(value) {z = value;});
+    Object.defineProperty(that, 'x', {
+      get: function() {return x;}
+    });
+    Object.defineProperty(that, 'y', {
+      get: function() {return y;}
+    });
+    Object.defineProperty(that, 'z', {
+      get: function() {return z;}
+    });
+    Object.defineProperty(that, 'xy', {
+      get: function() {return xy;}
+    });
+    Object.defineProperty(that, 'yz', {
+      get: function() {return yz;}
+    });
+    Object.defineProperty(that, 'zx', {
+      get: function() {return zx;}
+    });
+    Object.defineProperty(that, 'xyz', {
+      get: function() {return xyz;}
+    });
     return that;
   };
 

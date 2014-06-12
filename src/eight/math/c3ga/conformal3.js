@@ -18,19 +18,18 @@ define(function()
         return conformal3(x*x+y*y+z*z, 0, 0, 0, 0, 0, 0, 0);
       }
     };
-
     Object.defineProperty(that, 'w', {
-      get: function() {return w;},
-      set: function(value) {w = value;}
+      get: function() {return w;}
     });
-    // FIXME: The following are non-standard legacy and should not be used in production.
-    that.__defineGetter__('x', function() {return x;});
-    that.__defineSetter__('x', function(value) {x = value;});
-    that.__defineGetter__('y', function() {return y;});
-    that.__defineSetter__('y', function(value) {y = value;});
-    that.__defineGetter__('z', function() {return z;});
-    that.__defineSetter__('z', function(value) {z = value;});
-
+    Object.defineProperty(that, 'x', {
+      get: function() {return x;}
+    });
+    Object.defineProperty(that, 'y', {
+      get: function() {return y;}
+    });
+    Object.defineProperty(that, 'z', {
+      get: function() {return z;}
+    });
     return that;
   };
 

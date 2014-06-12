@@ -21,12 +21,10 @@
         var renderer = EIGHT.webGLRenderer();
 
         var box = EIGHT.mesh(EIGHT.boxGeometry());
-        box.position.x = -1.0;
-        box.position.y = -0.5;
-        box.position.z = -5;
+        box.position = EIGHT.vectorE3(-1.0,-0.5,-5);
         scene.add(box);
         var prism = EIGHT.mesh(EIGHT.prismGeometry());
-        prism.position.z = -5;
+        prism.position = EIGHT.vectorE3(0.0,0.0,-5);
         scene.add(prism);
 
         var B = EIGHT.bivectorE3(0,0,1);
