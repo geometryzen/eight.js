@@ -426,7 +426,7 @@ define("../vendor/almond/almond", function(){});
 
 define('eight/core',[],function() {
   var eight = {
-    VERSION: '0.0.4'
+    VERSION: '0.0.5'
   };
 
   return eight;
@@ -472,6 +472,8 @@ define('eight/math/e3ga/euclidean3',[],function()
 {
   var euclidean3 = function(w, x, y, z, xy, yz, zx, xyz)
   {
+    return new BLADE.Euclidean3(w, x, y, z, xy, yz, zx, xyz);
+/*
     w = w || 0;
     x = x || 0;
     y = y || 0;
@@ -533,6 +535,7 @@ define('eight/math/e3ga/euclidean3',[],function()
       get: function() {return xyz;}
     });
     return that;
+*/
   };
 
   return euclidean3;

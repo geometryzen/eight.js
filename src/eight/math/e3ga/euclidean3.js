@@ -2,6 +2,8 @@ define(function()
 {
   var euclidean3 = function(w, x, y, z, xy, yz, zx, xyz)
   {
+    return new BLADE.Euclidean3(w, x, y, z, xy, yz, zx, xyz);
+/*
     w = w || 0;
     x = x || 0;
     y = y || 0;
@@ -63,6 +65,7 @@ define(function()
       get: function() {return xyz;}
     });
     return that;
+*/
   };
 
   return euclidean3;
