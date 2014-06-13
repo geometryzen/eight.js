@@ -426,7 +426,7 @@ define("../vendor/almond/almond", function(){});
 
 define('eight/core',[],function() {
   var eight = {
-    VERSION: '0.0.3'
+    VERSION: '0.0.4'
   };
 
   return eight;
@@ -1056,9 +1056,102 @@ function(object3D, geometryConstructor, meshBasicMaterial, vs_source, fs_source)
 
   return mesh;
 });
+define('eight/utils/webGLContextMonitor',[],function()
+{
+  var webGLContextMonitor = function(canvas, contextLoss, contextGain)
+  {
+    var webGLContextLost = function(event)
+    {
+      event.preventDefault();
+      contextLoss();
+    };
+
+    var webGLContextRestored = function(event)
+    {
+      event.preventDefault();
+      var gl = canvas.getContext("webgl");
+      contextGain(gl);
+    };
+
+    var that =
+    {
+      start: function()
+      {
+        canvas.addEventListener('webglcontextlost', webGLContextLost, false);
+        canvas.addEventListener('webglcontextrestored', webGLContextRestored, false);
+      },
+      stop: function()
+      {
+        canvas.removeEventListener('webglcontextrestored', webGLContextRestored, false);
+        canvas.removeEventListener('webglcontextlost', webGLContextLost, false);
+      }
+    };
+
+    return that;
+  };
+
+  return webGLContextMonitor;
+});
+define('eight/utils/workbench3D',[],function()
+{
+  /**
+   * @const
+   * @type {string}
+   */
+  var EVENT_NAME_RESIZE = 'resize';
+
+  /**
+   * @const
+   * @type {string}
+   */
+  var TAG_NAME_CANVAS = 'canvas';
+
+  function removeElementsByTagName(doc, tagName)
+  {
+    var elements = doc.getElementsByTagName(tagName);
+    for (var i = elements.length - 1; i >= 0; i--)
+    {
+      var e = elements[i];
+      e.parentNode.removeChild(e);
+    }
+  }
+
+  var workbench3D = function(canvas, renderer, camera, win)
+  {
+    win = win || window;
+    var doc = win.document;
+
+    function onWindowResize(event)
+    {
+      var width  = win.innerWidth;
+      var height = win.innerHeight;
+      renderer.setSize(width, height);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    }
+
+    var that =
+    {
+      setUp: function()
+      {
+        doc.body.insertBefore(canvas, doc.body.firstChild);
+        win.addEventListener(EVENT_NAME_RESIZE, onWindowResize, false);
+      },
+      tearDown: function()
+      {
+        win.removeEventListener(EVENT_NAME_RESIZE, onWindowResize, false);
+        removeElementsByTagName(doc, TAG_NAME_CANVAS);
+      }
+    };
+
+    return that;
+  };
+
+  return workbench3D;
+});
 define('eight/utils/windowAnimationRunner',[],function()
 {
-  var constructor = function(tick, terminate, setUp, tearDown, win)
+  var windowAnimationRunner = function(tick, terminate, setUp, tearDown, win)
   {
     win = win || window;
     var escKeyPressed = false;
@@ -1131,7 +1224,7 @@ define('eight/utils/windowAnimationRunner',[],function()
       }
     };
 
-    var api =
+    var that =
     {
       start: function()
       {
@@ -1145,46 +1238,10 @@ define('eight/utils/windowAnimationRunner',[],function()
       }
     };
 
-    return api;
+    return that;
   };
 
-  return constructor;
-});
-define('eight/utils/webGLContextMonitor',[],function()
-{
-  var constructor = function(canvas, contextLoss, contextGain)
-  {
-    var webGLContextLost = function(event)
-    {
-      event.preventDefault();
-      contextLoss();
-    };
-
-    var webGLContextRestored = function(event)
-    {
-      event.preventDefault();
-      var gl = canvas.getContext("webgl");
-      contextGain(gl);
-    };
-
-    var api =
-    {
-      start: function()
-      {
-        canvas.addEventListener('webglcontextlost', webGLContextLost, false);
-        canvas.addEventListener('webglcontextrestored', webGLContextRestored, false);
-      },
-      stop: function()
-      {
-        canvas.removeEventListener('webglcontextrestored', webGLContextRestored, false);
-        canvas.removeEventListener('webglcontextlost', webGLContextLost, false);
-      }
-    };
-
-    return api;
-  };
-
-  return constructor;
+  return windowAnimationRunner;
 });
 define('eight/math/e3ga/scalarE3',['eight/math/e3ga/euclidean3'], function(euclidean3)
 {
@@ -1429,7 +1486,7 @@ define('eight/materials/meshNormalMaterial',['eight/core/material'], function(ma
 
   return constructor;
 });
-define('eight',['require','eight/core','eight/core/object3D','eight/core/geometry','eight/core/material','eight/cameras/camera','eight/cameras/perspectiveCamera','eight/renderers/webGLRenderer','eight/scenes/scene','eight/objects/mesh','eight/utils/windowAnimationRunner','eight/utils/webGLContextMonitor','eight/math/e3ga/euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/e3ga/bivectorE3','eight/math/c3ga/conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/boxGeometry','eight/geometries/prismGeometry','eight/materials/meshBasicMaterial','eight/materials/meshNormalMaterial'],function(require)
+define('eight',['require','eight/core','eight/core/object3D','eight/core/geometry','eight/core/material','eight/cameras/camera','eight/cameras/perspectiveCamera','eight/renderers/webGLRenderer','eight/scenes/scene','eight/objects/mesh','eight/utils/webGLContextMonitor','eight/utils/workbench3D','eight/utils/windowAnimationRunner','eight/math/e3ga/euclidean3','eight/math/e3ga/scalarE3','eight/math/e3ga/vectorE3','eight/math/e3ga/bivectorE3','eight/math/c3ga/conformal3','eight/math/c3ga/scalarC3','eight/math/c3ga/vectorC3','eight/geometries/boxGeometry','eight/geometries/prismGeometry','eight/materials/meshBasicMaterial','eight/materials/meshNormalMaterial'],function(require)
 {
   var eight = require('eight/core');
 
@@ -1445,8 +1502,9 @@ define('eight',['require','eight/core','eight/core/object3D','eight/core/geometr
   eight.scene = require('eight/scenes/scene');
   eight.mesh  = require('eight/objects/mesh');
 
-  eight.windowAnimationRunner = require('eight/utils/windowAnimationRunner');
   eight.webGLContextMonitor = require('eight/utils/webGLContextMonitor');
+  eight.workbench3D = require('eight/utils/workbench3D');
+  eight.windowAnimationRunner = require('eight/utils/windowAnimationRunner');
 
   eight.euclidean3 = require('eight/math/e3ga/euclidean3');
   eight.scalarE3   = require('eight/math/e3ga/scalarE3');

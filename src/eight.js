@@ -14,8 +14,9 @@ define(function(require)
   eight.scene = require('eight/scenes/scene');
   eight.mesh  = require('eight/objects/mesh');
 
-  eight.windowAnimationRunner = require('eight/utils/windowAnimationRunner');
   eight.webGLContextMonitor = require('eight/utils/webGLContextMonitor');
+  eight.workbench3D = require('eight/utils/workbench3D');
+  eight.windowAnimationRunner = require('eight/utils/windowAnimationRunner');
 
   eight.euclidean3 = require('eight/math/e3ga/euclidean3');
   eight.scalarE3   = require('eight/math/e3ga/scalarE3');

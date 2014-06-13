@@ -1,6 +1,6 @@
 define(function()
 {
-  var constructor = function(tick, terminate, setUp, tearDown, win)
+  var windowAnimationRunner = function(tick, terminate, setUp, tearDown, win)
   {
     win = win || window;
     var escKeyPressed = false;
@@ -73,7 +73,7 @@ define(function()
       }
     };
 
-    var api =
+    var that =
     {
       start: function()
       {
@@ -87,8 +87,8 @@ define(function()
       }
     };
 
-    return api;
+    return that;
   };
 
-  return constructor;
+  return windowAnimationRunner;
 });

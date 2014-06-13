@@ -1,6 +1,6 @@
 define(function()
 {
-  var constructor = function(canvas, contextLoss, contextGain)
+  var webGLContextMonitor = function(canvas, contextLoss, contextGain)
   {
     var webGLContextLost = function(event)
     {
@@ -15,7 +15,7 @@ define(function()
       contextGain(gl);
     };
 
-    var api =
+    var that =
     {
       start: function()
       {
@@ -29,8 +29,8 @@ define(function()
       }
     };
 
-    return api;
+    return that;
   };
 
-  return constructor;
+  return webGLContextMonitor;
 });
